@@ -4,9 +4,10 @@ using UnityEngine;
 
 namespace UCL.AudioLib {
     public class UCL_StreamingAudioSource : MonoBehaviour {
-        AudioSource m_Source;
-        UCL_StreamingAudioClip m_StreamingAudioClip;
-        public bool m_Playing = false;
+        public AudioSource m_Source { get; protected set; }
+        public bool m_Playing { get; protected set; } = false;
+        protected UCL_StreamingAudioClip m_StreamingAudioClip;
+        
 
         static public UCL_StreamingAudioSource Create(Transform parent) {
             GameObject Obj = new GameObject("StreamingAudioSource");
@@ -19,13 +20,20 @@ namespace UCL.AudioLib {
         virtual public void Init() {
             if(f_Inited) return;
             f_Inited = true;
+            GetClip();
 
-            m_StreamingAudioClip = gameObject.AddComponent<UCL_StreamingAudioClip>();
             m_StreamingAudioClip.Init();
 
             m_Source = gameObject.AddComponent<AudioSource>();
             m_Source.clip = m_StreamingAudioClip.m_Clip;
             m_Source.loop = false;
+        }
+
+        virtual public UCL_StreamingAudioClip GetClip() {
+            if(m_StreamingAudioClip == null) {
+                m_StreamingAudioClip = gameObject.AddComponent<UCL_StreamingAudioClip>();
+            }
+            return m_StreamingAudioClip;
         }
         public void Play() {
             m_Playing = true;
@@ -48,10 +56,24 @@ namespace UCL.AudioLib {
         }
         // Update is called once per frame
         void Update() {
+            if(!f_Inited) return;
+            if(m_StreamingAudioClip == null) return;
             if(m_Playing) {
-                if(!m_Source.isPlaying) {
+                int length_samples = m_StreamingAudioClip.m_LengthSamples;
+                //int channels = m_StreamingAudioClip.m_Channels;
+                int sample_at = m_Source.timeSamples;
+                if(!m_Source.isPlaying || sample_at >= length_samples) {
+                    //Debug.LogWarning("m_Source.timeSamples:" + m_Source.timeSamples + ",m_Source.clip.samples:" + m_Source.clip.samples);
                     if(m_StreamingAudioClip.LoadData()) {
-                        m_Source.Play();
+                        
+                        if(!m_Source.isPlaying) {
+                            //Debug.LogWarning("StartPlay!!");
+                            m_Source.Play();
+                            m_Source.timeSamples = length_samples;
+                        } else {//sample_at >= m_LengthSamples
+                            //Debug.LogWarning("ContinuePlay!!");
+                            m_Source.timeSamples = sample_at - length_samples;
+                        }
                     }
                 }
             }
