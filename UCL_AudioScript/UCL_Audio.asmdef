@@ -1,3 +1,15 @@
-﻿{
-	"name": "UCL_Audio"
+{
+    "name": "UCL_Audio",
+    "references": [
+        "GUID:fb313712d3efc8045821678f6c8743af",
+        "GUID:544d5f3147d0b974f8fdd20239429140"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": []
 }

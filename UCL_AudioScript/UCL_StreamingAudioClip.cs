@@ -4,11 +4,16 @@ using UnityEngine;
 
 namespace UCL.AudioLib {
     public class UCL_StreamingAudioClip : MonoBehaviour {
-        public struct AudioData {
-            public AudioData(float[] _data) {
+        public class AudioData {
+            public AudioData(float[] _data, System.Action<float[]> dispose_act) {
                 m_Data = _data;
+                m_DisposeAct = dispose_act;
+            }
+            public void Dispose() {
+                m_DisposeAct?.Invoke(m_Data);
             }
             public float[] m_Data;
+            System.Action<float[]> m_DisposeAct;
         }
         public int m_LengthSamples = 1024;
         public int m_Channels = 1;
@@ -16,9 +21,9 @@ namespace UCL.AudioLib {
         public bool m_Stream = false;
         
         public AudioClip m_Clip { get; protected set; }
-        protected float[] m_PrevData = null;
+        protected AudioData m_PrevData = null;
         protected Queue<AudioData> m_AudioDatas;
-
+        float[] m_EmptyArr;
         bool f_Inited = false;
         virtual public void Init() {
             if(f_Inited) return;
@@ -37,6 +42,8 @@ namespace UCL.AudioLib {
         }
         public void UpdateClipSetting() {
             ClearClip();
+            m_AudioDatas.Clear();
+            m_EmptyArr = new float[m_LengthSamples * m_Channels];
             m_Clip = AudioClip.Create(name, 2 * m_LengthSamples, m_Channels, m_Frequency, m_Stream);
         }
         public UCL_StreamingAudioClip SetLengthSamples(int val) {
@@ -54,17 +61,24 @@ namespace UCL.AudioLib {
         public int GetDataCount() {
             return m_AudioDatas.Count;
         }
-        public UCL_StreamingAudioClip AddData(float[] data) {
+        public UCL_StreamingAudioClip AddData(float[] data, System.Action<float[]> dispose_act = null) {
             if(data.Length != m_LengthSamples * m_Channels) return this;
-            m_AudioDatas.Enqueue(new AudioData(data));
+            m_AudioDatas.Enqueue(new AudioData(data, dispose_act));
             return this;
+        }
+        protected void SetPrevData(AudioData data) {
+            if(m_PrevData != null) {
+                m_PrevData.Dispose();
+            }
+            m_PrevData = data;
         }
         public bool LoadData() {
             if(m_AudioDatas.Count == 0) {
                 if(m_PrevData != null) {
                     //if(m_Channels>1)
-                    m_Clip.SetData(m_PrevData, 0);
-                    m_PrevData = null;
+                    m_Clip.SetData(m_PrevData.m_Data, 0);
+                    m_Clip.SetData(m_EmptyArr, m_LengthSamples);
+                    SetPrevData(null);
                     return true;
                 }
                 return false;
@@ -73,11 +87,13 @@ namespace UCL.AudioLib {
             var data = m_AudioDatas.Dequeue();
 
             if(m_PrevData != null) {
-                m_Clip.SetData(m_PrevData, 0);
+                m_Clip.SetData(m_PrevData.m_Data, 0);
+            } else {
+                m_Clip.SetData(m_EmptyArr, 0);
             }
             m_Clip.SetData(data.m_Data, m_LengthSamples);
 
-            m_PrevData = data.m_Data;
+            SetPrevData(data);
             return true;
         }
     }

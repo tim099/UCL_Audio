@@ -45,9 +45,15 @@ namespace UCL.AudioLib {
             if(f_Inited) return;
             m_Source.Pause();
         }
-        public UCL_StreamingAudioSource AddData(float[] data) {
+        /// <summary>
+        /// dispose_act invoke when data no longer in use!!
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="dispose_act"></param>
+        /// <returns></returns>
+        public UCL_StreamingAudioSource AddData(float[] data, System.Action<float[]> dispose_act = null) {
             if(m_StreamingAudioClip == null) return this;
-            m_StreamingAudioClip.AddData(data);
+            m_StreamingAudioClip.AddData(data, dispose_act);
             return this;
         }
         public int GetDataCount() {
