@@ -9,7 +9,7 @@ namespace UCL.AudioLib {
         /// </summary>
         /// <param name="src"></param>
         /// <param name="dst"></param>
-        public static void PCM_ShortToFloat(ref short[] src, ref float[] dst) {
+        public static void PCM_ShortToFloat(short[] src, float[] dst) {
             if(src == null || dst == null) return;
             int len = src.Length;
             if(len > dst.Length) len = dst.Length;
@@ -23,7 +23,7 @@ namespace UCL.AudioLib {
         /// </summary>
         /// <param name="src"></param>
         /// <param name="dst"></param>
-        public static void PCM_FloatToShort(ref float[] src, ref short[] dst) {
+        public static void PCM_FloatToShort(float[] src, short[] dst) {
             if(src == null || dst == null) return;
             int len = src.Length;
             if(len > dst.Length) len = dst.Length;

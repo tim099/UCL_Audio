@@ -19,7 +19,12 @@ namespace UCL.AudioLib {
         public int m_Channels = 1;
         public int m_Frequency = 8000;
         public bool m_Stream = false;
-        
+
+        /// <summary>
+        /// Max m_AudioDatas count
+        /// </summary>
+        public int m_MaxBufferCount = 4;
+
         public AudioClip m_Clip { get; protected set; }
         protected AudioData m_PrevData = null;
         protected Queue<AudioData> m_AudioDatas;
@@ -62,7 +67,10 @@ namespace UCL.AudioLib {
             return m_AudioDatas.Count;
         }
         public UCL_StreamingAudioClip AddData(float[] data, System.Action<float[]> dispose_act = null) {
-            if(data.Length != m_LengthSamples * m_Channels) return this;
+            if(m_AudioDatas.Count >= m_MaxBufferCount || data.Length != m_LengthSamples * m_Channels) {
+                dispose_act?.Invoke(data);
+                return this;
+            }
             m_AudioDatas.Enqueue(new AudioData(data, dispose_act));
             return this;
         }

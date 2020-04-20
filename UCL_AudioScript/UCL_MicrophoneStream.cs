@@ -49,6 +49,11 @@ namespace UCL.AudioLib {
         public uint m_DeviceID = 0;
         public bool m_Loop = true;
         public int m_LengthSec = 4;
+        /// <summary>
+        /// Max m_AudioDatas count
+        /// </summary>
+        public int m_MaxBufferCount = 4;
+
         public string m_DeviceName { get; protected set; }
         public AudioSource m_AudioSource;
         //public int m_Position = 0;
@@ -112,10 +117,13 @@ namespace UCL.AudioLib {
                 
                 float[] data = Rent();
                 m_Clip.GetData(data, m_ReadPosition);
+                if(m_RecordQue.Count >= m_MaxBufferCount) {
+                    Return(m_RecordQue.Dequeue());
+                }
                 m_RecordQue.Enqueue(data);
 
                 m_ReadPosition += m_Length;
-                if(m_ReadPosition > m_Clip.samples) {
+                if(m_ReadPosition >= m_Clip.samples) {
                     m_ReadPosition -= m_Clip.samples;
                 }
                 //Debug.LogWarning("Pos:" + Position+",Record!!:"+m_RecordQue.Count);
