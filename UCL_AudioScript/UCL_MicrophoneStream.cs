@@ -55,8 +55,6 @@ namespace UCL.AudioLib {
         public int m_MaxBufferCount = 4;
 
         public string m_DeviceName { get; protected set; }
-        public AudioSource m_AudioSource;
-        //public int m_Position = 0;
         public int m_ReadPosition =0;
         protected Queue<float[]> m_RecordQue;
         protected AudioClip m_Clip;
@@ -74,12 +72,6 @@ namespace UCL.AudioLib {
             }
             m_DeviceName = Microphone.devices[m_DeviceID];
             m_Clip = Microphone.Start(m_DeviceName, m_Loop, m_LengthSec, m_Frequency);
-            if(m_AudioSource) {
-                m_AudioSource.clip = m_Clip;
-                m_AudioSource.loop = true;
-                m_AudioSource.Play();
-                Debug.Log("Set UCL_MicrophoneStream m_AudioSource!!");
-            }
             m_RecordQue = new Queue<float[]>();
             Debug.Log("Init UCL_MicrophoneStream End!!");
         }
