@@ -48,6 +48,7 @@ namespace UCL.AudioLib {
         #endregion
         public uint m_DeviceID = 0;
         public bool m_Loop = true;
+        public bool m_Recording = true;
         public int m_LengthSec = 4;
         /// <summary>
         /// Clip the audio which abs val smaller than m_ClippingThreshold
@@ -64,6 +65,16 @@ namespace UCL.AudioLib {
         protected int m_ClippingTimer = 0;
         protected Queue<float[]> m_RecordQue;
         protected AudioClip m_Clip;
+
+        private void OnEnable() {
+            StartRecord();
+        }
+        private void OnDisable() {
+            StopRecord();
+        }
+        private void OnDestroy() {
+            StopRecord();
+        }
         public override void Init(int Length) {
             base.Init(Length);
             RequestUserAuthorization();
@@ -78,11 +89,18 @@ namespace UCL.AudioLib {
             StartRecord();
         }
         public void StartRecord() {
-            if(m_Clip != null) StopRecord();
+            if(!m_Recording) return;
 
+            if(m_Clip != null) StopRecord();
+            m_ReadPosition = 0;
             m_DeviceName = Microphone.devices[m_DeviceID];
             m_Clip = Microphone.Start(m_DeviceName, m_Loop, m_LengthSec, m_Frequency);
-            m_RecordQue = new Queue<float[]>();
+            if(m_RecordQue == null) {
+                m_RecordQue = new Queue<float[]>();
+            } else {
+                m_RecordQue.Clear();
+            }
+            
         }
         public void StopRecord() {
             if(m_Clip == null) return;
@@ -93,6 +111,7 @@ namespace UCL.AudioLib {
             Destroy(m_Clip);
             m_Clip = null;
         }
+
         protected int GetPosition() {
             if(m_Clip == null) return 0;
             return Microphone.GetPosition(m_DeviceName);
@@ -110,7 +129,19 @@ namespace UCL.AudioLib {
         }
 
         virtual protected void RecordUpdate() {
+            if(!m_Recording) {
+                if(m_Clip != null) {
+                    StopRecord();
+                    return;
+                }
+            } else {
+                if(m_Clip == null) {
+                    StartRecord();
+                    return;
+                }
+            }
             if(m_Pool == null || m_Clip == null) return;
+
             int Position = GetPosition();
             int del = Position - m_ReadPosition;
             if(del < 0) {//loop!!

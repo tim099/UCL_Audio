@@ -386,8 +386,9 @@ MonoBehaviour:
   m_Channels: 1
   m_DeviceID: 0
   m_Loop: 1
+  m_Recording: 1
   m_LengthSec: 10
-  m_ClippingThreshold: 0.3
+  m_ClippingThreshold: 0
   m_MaxBufferCount: 4
   m_ReadPosition: 0
 --- !u!1 &1119188690
