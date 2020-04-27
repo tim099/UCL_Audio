@@ -168,7 +168,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &241782048
 Transform:
   m_ObjectHideFlags: 0
@@ -247,7 +247,7 @@ MonoBehaviour:
   m_Frequency: 8000
   m_Channels: 1
   m_Clip: {fileID: 8300000, guid: d506bd17b67f5e04a9275f3b7f583726, type: 3}
-  m_LoadSampleAt: 0
+  m_LoadSampleAt: 224912
 --- !u!1 &611204696
 GameObject:
   m_ObjectHideFlags: 0
@@ -387,6 +387,7 @@ MonoBehaviour:
   m_DeviceID: 0
   m_Loop: 1
   m_LengthSec: 10
+  m_ClippingThreshold: 0.3
   m_MaxBufferCount: 4
   m_ReadPosition: 0
 --- !u!1 &1119188690
@@ -488,7 +489,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1317257593
 Transform:
   m_ObjectHideFlags: 0
