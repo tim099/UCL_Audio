@@ -67,20 +67,25 @@ namespace UCL.AudioLib {
             if(m_Playing) {
                 int length_samples = m_StreamingAudioClip.m_LengthSamples;
                 //int channels = m_StreamingAudioClip.m_Channels;
+                //Debug.Log("m_Source.timeSamples:" + m_Source.timeSamples);
                 int sample_at = m_Source.timeSamples;
-                if(!m_Source.isPlaying || sample_at >= length_samples) {
-                    //Debug.LogWarning("m_Source.timeSamples:" + m_Source.timeSamples + ",m_Source.clip.samples:" + m_Source.clip.samples);
+                if(!m_Source.isPlaying) {
                     if(m_StreamingAudioClip.LoadData()) {
-                        
-                        if(!m_Source.isPlaying) {
-                            //Debug.LogWarning("StartPlay!!");
-                            m_Source.Play();
-                            m_Source.timeSamples = length_samples;
-                        } else {//sample_at >= m_LengthSamples
-                            //Debug.LogWarning("ContinuePlay!!");
+                        //Debug.LogWarning("StartPlay!!");
+                        m_Source.Play();
+                        m_Source.timeSamples = 0;//length_samples;
+                    }
+                } else {//Playing!!
+                    if(sample_at >= length_samples) {//Load new data!!
+                        //Debug.LogWarning("m_Source.timeSamples:" + m_Source.timeSamples + ",m_Source.clip.samples:" + m_Source.clip.samples);
+                        if(m_StreamingAudioClip.LoadData()) {
+                            //Debug.LogWarning("ContinuePlay!!:" + m_Source.timeSamples);
                             m_Source.timeSamples = sample_at - length_samples;
                         }
+                    } else {
+                        //Debug.LogWarning("Playing:" + m_Source.timeSamples);
                     }
+
                 }
             }
         }

@@ -50,16 +50,21 @@ namespace UCL.AudioLib {
         public bool m_Loop = true;
         public int m_LengthSec = 4;
         /// <summary>
+        /// Clip the audio which abs val smaller than m_ClippingThreshold
+        /// </summary>
+        public float m_ClippingThreshold = 0;
+        /// <summary>
         /// Max m_AudioDatas count
         /// </summary>
         public int m_MaxBufferCount = 4;
 
         public string m_DeviceName { get; protected set; }
         public int m_ReadPosition =0;
+
+        protected int m_ClippingTimer = 0;
         protected Queue<float[]> m_RecordQue;
         protected AudioClip m_Clip;
         public override void Init(int Length) {
-            Debug.Log("Init UCL_MicrophoneStream");
             base.Init(Length);
             RequestUserAuthorization();
             if(!f_Authorization) {
@@ -70,17 +75,23 @@ namespace UCL.AudioLib {
                 Debug.LogError("Microphone.devices.Length:" + Microphone.devices.Length + ",m_DiviceID:" + m_DeviceID);
                 return;
             }
+            StartRecord();
+        }
+        public void StartRecord() {
+            if(m_Clip != null) StopRecord();
+
             m_DeviceName = Microphone.devices[m_DeviceID];
             m_Clip = Microphone.Start(m_DeviceName, m_Loop, m_LengthSec, m_Frequency);
             m_RecordQue = new Queue<float[]>();
-            Debug.Log("Init UCL_MicrophoneStream End!!");
         }
-        public void Stop() {
+        public void StopRecord() {
             if(m_Clip == null) return;
-
+            while(m_RecordQue.Count > 0) {
+                Return(m_RecordQue.Dequeue());
+            }
             Microphone.End(m_DeviceName);
-            //Destroy(m_Clip);
-            //m_Clip = null;
+            Destroy(m_Clip);
+            m_Clip = null;
         }
         protected int GetPosition() {
             if(m_Clip == null) return 0;
@@ -97,6 +108,7 @@ namespace UCL.AudioLib {
 
             return m_RecordQue.Dequeue();
         }
+
         virtual protected void RecordUpdate() {
             if(m_Pool == null || m_Clip == null) return;
             int Position = GetPosition();
@@ -109,10 +121,34 @@ namespace UCL.AudioLib {
                 
                 float[] data = Rent();
                 m_Clip.GetData(data, m_ReadPosition);
-                if(m_RecordQue.Count >= m_MaxBufferCount) {
-                    Return(m_RecordQue.Dequeue());
+                bool skip = false;
+                if(m_ClippingThreshold > 0) {
+                    float max = 0;
+                    for(int i = 0; i < data.Length; i++) {
+                        max = Mathf.Max(max, Mathf.Abs(data[i]));
+                    }
+                    
+                    if(max < m_ClippingThreshold) {//Skip
+                        if(m_ClippingTimer > 2) {
+                            //Debug.LogWarning("Skip Max:" + max);
+                            skip = true;
+                        } else {
+                            //Debug.LogWarning("Max:" + max + ",m_ClippingTimer:"+ m_ClippingTimer);
+                            m_ClippingTimer++;
+                        }
+                    } else {
+                        m_ClippingTimer = 0;
+                    }
                 }
-                m_RecordQue.Enqueue(data);
+
+                if(!skip) {
+                    if(m_RecordQue.Count >= m_MaxBufferCount) {
+                        Return(m_RecordQue.Dequeue());
+                    }
+                    m_RecordQue.Enqueue(data);
+                } else {
+                    Return(data);
+                }
 
                 m_ReadPosition += m_Length;
                 if(m_ReadPosition >= m_Clip.samples) {
