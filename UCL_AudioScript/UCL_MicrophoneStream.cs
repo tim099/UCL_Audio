@@ -98,7 +98,9 @@ namespace UCL.AudioLib {
             if(m_RecordQue == null) {
                 m_RecordQue = new Queue<float[]>();
             } else {
-                m_RecordQue.Clear();
+                while(m_RecordQue.Count > 0) {
+                    Return(m_RecordQue.Dequeue());
+                }
             }
             
         }
