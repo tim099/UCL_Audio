@@ -51,9 +51,16 @@ namespace UCL.AudioLib {
         public bool m_Recording = true;
         public int m_LengthSec = 4;
         /// <summary>
-        /// Clip the audio which abs val smaller than m_ClippingThreshold
+        /// if audio sample abs value > m_ClippingThreshold then valid_count++
         /// </summary>
         public float m_ClippingThreshold = 0;
+        /// <summary>
+        /// if valid_count less than m_ClippingValidCount
+        /// than clip the sample
+        /// </summary>
+        public int m_ClippingValidCount = 4;
+
+
         /// <summary>
         /// Max m_AudioDatas count
         /// </summary>
@@ -129,7 +136,6 @@ namespace UCL.AudioLib {
 
             return m_RecordQue.Dequeue();
         }
-
         virtual protected void RecordUpdate() {
             if(!m_Recording) {
                 if(m_Clip != null) {
@@ -151,19 +157,23 @@ namespace UCL.AudioLib {
             }
             
             if(del > m_Length) {
-                
                 float[] data = Rent();
                 m_Clip.GetData(data, m_ReadPosition);
                 bool skip = false;
                 if(m_ClippingThreshold > 0) {
-                    float max = 0;
+                    int valid_count = 0;
+                    if(m_ClippingValidCount > data.Length) m_ClippingValidCount = data.Length;
+
                     for(int i = 0; i < data.Length; i++) {
-                        max = Mathf.Max(max, Mathf.Abs(data[i]));
+                        if(Mathf.Abs(data[i]) > m_ClippingThreshold) {
+                            valid_count++;
+                        }
+                        //max = Mathf.Max(max, Mathf.Abs(data[i]));
                     }
-                    
-                    if(max < m_ClippingThreshold) {//Skip
+
+                    if(valid_count < m_ClippingValidCount) {//Skip
                         if(m_ClippingTimer > 2) {
-                            //Debug.LogWarning("Skip Max:" + max);
+                            //Debug.LogWarning("Skip sample_times:" + sample_times);
                             skip = true;
                         } else {
                             //Debug.LogWarning("Max:" + max + ",m_ClippingTimer:"+ m_ClippingTimer);
