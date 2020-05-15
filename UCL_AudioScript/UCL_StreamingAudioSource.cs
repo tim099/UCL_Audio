@@ -83,11 +83,11 @@ namespace UCL.AudioLib {
                 //Debug.Log("m_Source.timeSamples:" + m_Source.timeSamples);
                 int sample_at = m_Source.timeSamples;
                 if(!m_Source.isPlaying) {
-                    if(m_StreamingAudioClip.LoadData(true)) {
+                    if(m_StreamingAudioClip.LoadData()) {
                         //Debug.LogWarning("StartPlay!!");
                         m_Source.Play();
                         m_OnPlayEvent?.Invoke();
-                        m_Source.timeSamples = length_samples/2;//length_samples;
+                        m_Source.timeSamples = 0;//length_samples;/2
                     }
                 } else {//Playing!!
                     if(sample_at >= length_samples) {//Load new data!!
@@ -95,9 +95,6 @@ namespace UCL.AudioLib {
                         if(m_StreamingAudioClip.LoadData()) {
                             //Debug.LogWarning("ContinuePlay!!:" + m_Source.timeSamples);
                             m_Source.timeSamples = sample_at - length_samples;
-                        } else {
-                            m_OnStopEvent?.Invoke();
-                            m_Source.Stop();
                         }
                     } else {
                         //Debug.LogWarning("Playing:" + m_Source.timeSamples);
@@ -108,5 +105,22 @@ namespace UCL.AudioLib {
                 m_IsPlayingEvent?.Invoke(isPlaying);
             }
         }
+        #region Editor
+#if UNITY_EDITOR
+        [SerializeField] bool f_DebugMode = false;
+        [SerializeField] Texture m_IsPlaying;
+        private void OnGUI() {
+            if(!f_DebugMode) return;
+            if(!f_Inited) return;
+            if(m_StreamingAudioClip == null) return;
+
+            GUILayout.BeginVertical();
+
+            GUILayout.Button("pos:" + m_Source.timeSamples);
+            if(isPlaying) GUILayout.Box(m_IsPlaying,GUILayout.Width(64), GUILayout.Height(64));
+            GUILayout.EndVertical();
+        }
+#endif
+        #endregion
     }
 }

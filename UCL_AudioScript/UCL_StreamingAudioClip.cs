@@ -80,28 +80,17 @@ namespace UCL.AudioLib {
             }
             m_PrevData = data;
         }
-        public bool LoadData(bool init = false) {
+        public bool LoadData() {
             if(m_AudioDatas.Count == 0) {
-                if(m_PrevData != null) {
-                    //if(m_Channels>1)
-                    m_Clip.SetData(m_PrevData.m_Data, 0);
-                    m_Clip.SetData(m_EmptyArr, m_LengthSamples);
-                    SetPrevData(null);
-                    return true;
-                }
                 return false;
             }
-
             var data = m_AudioDatas.Dequeue();
+            if(m_PrevData != null) m_Clip.SetData(m_PrevData.m_Data, 0);
+            else m_Clip.SetData(m_EmptyArr, 0);
 
-            if(m_PrevData != null) {
-                m_Clip.SetData(m_PrevData.m_Data, 0);
-            } else {
-                m_Clip.SetData(m_EmptyArr, 0);
-            }
             m_Clip.SetData(data.m_Data, m_LengthSamples);
-
             SetPrevData(data);
+
             return true;
         }
     }

@@ -136,6 +136,7 @@ namespace UCL.AudioLib {
 
             return m_RecordQue.Dequeue();
         }
+        //float timer = 0;
         virtual protected void RecordUpdate() {
             if(!m_Recording) {
                 if(m_Clip != null) {
@@ -149,14 +150,16 @@ namespace UCL.AudioLib {
                 }
             }
             if(m_Pool == null || m_Clip == null) return;
-
+            
             int Position = GetPosition();
             int del = Position - m_ReadPosition;
             if(del < 0) {//loop!!
                 del = (m_Clip.samples - m_ReadPosition) + Position;
             }
-            
+            //timer += Time.deltaTime;
             if(del > m_Length) {
+                //Debug.LogWarning("Record Time:" + timer);
+                //timer = 0;
                 float[] data = Rent();
                 m_Clip.GetData(data, m_ReadPosition);
                 bool skip = false;
