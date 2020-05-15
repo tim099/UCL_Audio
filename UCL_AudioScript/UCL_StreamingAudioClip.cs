@@ -80,7 +80,7 @@ namespace UCL.AudioLib {
             }
             m_PrevData = data;
         }
-        public bool LoadData() {
+        public bool LoadData(bool init = false) {
             if(m_AudioDatas.Count == 0) {
                 if(m_PrevData != null) {
                     //if(m_Channels>1)

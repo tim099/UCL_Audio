@@ -11,7 +11,7 @@ namespace UCL.AudioLib {
         /// Stop playing when m_Pause == true
         /// </summary>
         public bool m_Pause = false;
-        protected UCL_StreamingAudioSource m_UCL_StreamingAudioSource;
+        public UCL_StreamingAudioSource m_UCL_StreamingAudioSource;
         protected int m_DataSize;
         protected bool f_Inited = false;
         virtual public void Init() {
@@ -20,7 +20,10 @@ namespace UCL.AudioLib {
 
             m_UCL_AudioStream.Init(m_BufferLen);
             m_DataSize = m_UCL_AudioStream.m_Channels * m_BufferLen;
-            m_UCL_StreamingAudioSource = UCL_StreamingAudioSource.Create(transform);
+            if(m_UCL_StreamingAudioSource == null) {
+                m_UCL_StreamingAudioSource = UCL_StreamingAudioSource.Create(transform);
+            }
+
 
             m_UCL_StreamingAudioSource.GetClip()
                 .SetFrequency(m_UCL_AudioStream.m_Frequency)

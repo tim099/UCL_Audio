@@ -4,8 +4,14 @@ using UnityEngine;
 
 namespace UCL.AudioLib {
     public class UCL_StreamingAudioSource : MonoBehaviour {
+        [System.Serializable]
+        public class IsPlayingEvent : UnityEngine.Events.UnityEvent<bool> {}
+
         public AudioSource m_Source { get; protected set; }
         public bool m_Playing { get; protected set; } = false;
+        public UnityEngine.Events.UnityEvent m_OnPlayEvent;
+        public UnityEngine.Events.UnityEvent m_OnStopEvent;
+        public IsPlayingEvent m_IsPlayingEvent;
         protected UCL_StreamingAudioClip m_StreamingAudioClip;
         
 
@@ -13,6 +19,7 @@ namespace UCL.AudioLib {
             GameObject Obj = new GameObject("StreamingAudioSource");
             Obj.transform.SetParent(parent);
             var src = Obj.AddComponent<UCL_StreamingAudioSource>();
+
             return src;
         }
 
@@ -44,6 +51,7 @@ namespace UCL.AudioLib {
             m_Playing = false;
             if(f_Inited) return;
             m_Source.Pause();
+            m_OnStopEvent?.Invoke();
         }
         /// <summary>
         /// dispose_act invoke when data no longer in use!!
@@ -60,6 +68,11 @@ namespace UCL.AudioLib {
             if(m_StreamingAudioClip == null) return 0;
             return m_StreamingAudioClip.GetDataCount();
         }
+        public bool isPlaying { get {
+                if(!f_Inited || !m_Playing || m_Source == null) return false;
+                return m_Source.isPlaying;
+            }
+        }
         // Update is called once per frame
         void Update() {
             if(!f_Inited) return;
@@ -70,10 +83,11 @@ namespace UCL.AudioLib {
                 //Debug.Log("m_Source.timeSamples:" + m_Source.timeSamples);
                 int sample_at = m_Source.timeSamples;
                 if(!m_Source.isPlaying) {
-                    if(m_StreamingAudioClip.LoadData()) {
+                    if(m_StreamingAudioClip.LoadData(true)) {
                         //Debug.LogWarning("StartPlay!!");
                         m_Source.Play();
-                        m_Source.timeSamples = 0;//length_samples;
+                        m_OnPlayEvent?.Invoke();
+                        m_Source.timeSamples = length_samples/2;//length_samples;
                     }
                 } else {//Playing!!
                     if(sample_at >= length_samples) {//Load new data!!
@@ -81,12 +95,17 @@ namespace UCL.AudioLib {
                         if(m_StreamingAudioClip.LoadData()) {
                             //Debug.LogWarning("ContinuePlay!!:" + m_Source.timeSamples);
                             m_Source.timeSamples = sample_at - length_samples;
+                        } else {
+                            m_OnStopEvent?.Invoke();
+                            m_Source.Stop();
                         }
                     } else {
                         //Debug.LogWarning("Playing:" + m_Source.timeSamples);
                     }
 
                 }
+
+                m_IsPlayingEvent?.Invoke(isPlaying);
             }
         }
     }
