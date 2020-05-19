@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace UCL.AudioLib {
     public class UCL_StreamingAudioSource : MonoBehaviour {
@@ -108,7 +109,23 @@ namespace UCL.AudioLib {
         #region Editor
 #if UNITY_EDITOR
         [SerializeField] bool f_DebugMode = false;
-        [SerializeField] Texture m_IsPlaying;
+
+        Core.TextureLib.UCL_Texture2D m_PlayTexture;
+        private void Awake() {
+            if(m_PlayTexture == null) {
+                m_PlayTexture = new UCL.Core.TextureLib.UCL_Texture2D(new Vector2Int(64, 64));
+                for(int i = 0; i < m_PlayTexture.height; i++) {
+                    for(int j = 0; j < m_PlayTexture.width; j++) {
+                        m_PlayTexture.SetPixel(i, j, Color.Lerp(Color.blue, Color.yellow, (0.5f * i + 0.5f * j) / m_PlayTexture.height));
+                    }
+                }
+                ///*
+                for(int i = 0; i < m_PlayTexture.height; i++) {
+                    m_PlayTexture.SetPixel(32, i, Color.red);
+                    m_PlayTexture.SetPixel(i, 32, Color.green);
+                }
+            }
+        }
         private void OnGUI() {
             if(!f_DebugMode) return;
             if(!f_Inited) return;
@@ -117,7 +134,7 @@ namespace UCL.AudioLib {
             GUILayout.BeginVertical();
 
             GUILayout.Button("pos:" + m_Source.timeSamples);
-            if(isPlaying) GUILayout.Box(m_IsPlaying,GUILayout.Width(64), GUILayout.Height(64));
+            if(isPlaying) GUILayout.Box(m_PlayTexture.texture);//GUILayout.Box(m_IsPlaying);//, GUILayout.Width(64), GUILayout.Height(64)
             GUILayout.EndVertical();
         }
 #endif

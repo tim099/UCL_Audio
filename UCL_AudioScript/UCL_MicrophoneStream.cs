@@ -59,8 +59,10 @@ namespace UCL.AudioLib {
         /// than clip the sample
         /// </summary>
         public int m_ClippingValidCount = 4;
-
-
+        /// <summary>
+        /// if unvalid count more then MinValidSegCount then start clipping
+        /// </summary>
+        public int m_MinValidSegCount = 2;
         /// <summary>
         /// Max m_AudioDatas count
         /// </summary>
@@ -175,7 +177,7 @@ namespace UCL.AudioLib {
                     }
 
                     if(valid_count < m_ClippingValidCount) {//Skip
-                        if(m_ClippingTimer > 2) {
+                        if(m_ClippingTimer > m_MinValidSegCount) {
                             //Debug.LogWarning("Skip sample_times:" + sample_times);
                             skip = true;
                         } else {
