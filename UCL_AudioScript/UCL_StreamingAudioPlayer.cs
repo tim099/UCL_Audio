@@ -38,13 +38,15 @@ namespace UCL.AudioLib {
             if(m_InitOnStart) Init();
         }
 
-        
-        void Update() {
+
+        void FixedUpdate() {
             if(m_Pause) return;
-            if(m_UCL_StreamingAudioSource.GetDataCount() < m_MaxDataCount) {
+            while(m_UCL_StreamingAudioSource.GetDataCount() < m_MaxDataCount) {
                 var data = m_UCL_AudioStream.Load();
                 if(data != null) {
                     m_UCL_StreamingAudioSource.AddData(data, m_UCL_AudioStream.Return);
+                } else {
+                    break;
                 }
 
             }

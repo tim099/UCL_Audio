@@ -74,8 +74,8 @@ namespace UCL.AudioLib {
                 return m_Source.isPlaying;
             }
         }
-        // Update is called once per frame
-        void Update() {
+
+        void FixedUpdate() {
             if(!f_Inited) return;
             if(m_StreamingAudioClip == null) return;
             if(m_Playing) {
@@ -84,21 +84,17 @@ namespace UCL.AudioLib {
                 //Debug.Log("m_Source.timeSamples:" + m_Source.timeSamples);
                 int sample_at = m_Source.timeSamples;
                 if(!m_Source.isPlaying) {
-                    if(m_StreamingAudioClip.LoadData()) {
+                    sample_at = m_StreamingAudioClip.m_LengthSamples * m_StreamingAudioClip.m_BufferCount;
+                    if(m_StreamingAudioClip.LoadData(ref sample_at)) {
                         //Debug.LogWarning("StartPlay!!");
                         m_Source.Play();
                         m_OnPlayEvent?.Invoke();
-                        m_Source.timeSamples = 0;//length_samples;/2
+                        m_Source.timeSamples = sample_at;// 0;//length_samples;/2
                     }
                 } else {//Playing!!
-                    if(sample_at >= length_samples) {//Load new data!!
-                        //Debug.LogWarning("m_Source.timeSamples:" + m_Source.timeSamples + ",m_Source.clip.samples:" + m_Source.clip.samples);
-                        if(m_StreamingAudioClip.LoadData()) {
-                            //Debug.LogWarning("ContinuePlay!!:" + m_Source.timeSamples);
-                            m_Source.timeSamples = sample_at - length_samples;
-                        }
-                    } else {
-                        //Debug.LogWarning("Playing:" + m_Source.timeSamples);
+                    if(m_StreamingAudioClip.LoadData(ref sample_at)) {
+                        //Debug.LogWarning("ContinuePlay!!:" + m_Source.timeSamples);
+                        m_Source.timeSamples = sample_at;//sample_at - length_samples;
                     }
 
                 }
@@ -106,38 +102,5 @@ namespace UCL.AudioLib {
                 m_IsPlayingEvent?.Invoke(isPlaying);
             }
         }
-        #region Editor
-#if UNITY_EDITOR
-        [SerializeField] bool f_DebugMode = false;
-
-        Core.TextureLib.UCL_Texture2D m_PlayTexture;
-        private void Awake() {
-            if(m_PlayTexture == null) {
-                m_PlayTexture = new UCL.Core.TextureLib.UCL_Texture2D(new Vector2Int(64, 64));
-                for(int i = 0; i < m_PlayTexture.height; i++) {
-                    for(int j = 0; j < m_PlayTexture.width; j++) {
-                        m_PlayTexture.SetPixel(i, j, Color.Lerp(Color.blue, Color.yellow, (0.5f * i + 0.5f * j) / m_PlayTexture.height));
-                    }
-                }
-                ///*
-                for(int i = 0; i < m_PlayTexture.height; i++) {
-                    m_PlayTexture.SetPixel(32, i, Color.red);
-                    m_PlayTexture.SetPixel(i, 32, Color.green);
-                }
-            }
-        }
-        private void OnGUI() {
-            if(!f_DebugMode) return;
-            if(!f_Inited) return;
-            if(m_StreamingAudioClip == null) return;
-
-            GUILayout.BeginVertical();
-
-            GUILayout.Button("pos:" + m_Source.timeSamples);
-            if(isPlaying) GUILayout.Box(m_PlayTexture.texture);//GUILayout.Box(m_IsPlaying);//, GUILayout.Width(64), GUILayout.Height(64)
-            GUILayout.EndVertical();
-        }
-#endif
-        #endregion
     }
 }

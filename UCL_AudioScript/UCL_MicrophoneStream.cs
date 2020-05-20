@@ -71,6 +71,7 @@ namespace UCL.AudioLib {
         public string m_DeviceName { get; protected set; }
         public int m_ReadPosition =0;
 
+        protected int m_MicPosition = 0;
         protected int m_ClippingTimer = 0;
         protected Queue<float[]> m_RecordQue;
         protected AudioClip m_Clip;
@@ -139,24 +140,40 @@ namespace UCL.AudioLib {
             return m_RecordQue.Dequeue();
         }
         //float timer = 0;
-        virtual protected void RecordUpdate() {
+        virtual protected bool RecordUpdate() {
             if(!m_Recording) {
                 if(m_Clip != null) {
                     StopRecord();
-                    return;
+                    return false;
                 }
             } else {
                 if(m_Clip == null) {
                     StartRecord();
-                    return;
+                    return false;
                 }
             }
-            if(m_Pool == null || m_Clip == null) return;
-            
-            int Position = GetPosition();
-            int del = Position - m_ReadPosition;
+            if(m_Pool == null || m_Clip == null) return false;
+
+            m_MicPosition = GetPosition();
+            int i = 0;
+            bool flag = false;
+            while(ReadRecordData() && ++i < 100) {
+                flag = true;
+            }
+            return flag;
+        }
+        public void GetOutputData(float[] data) {
+            if(m_Clip == null) return;
+            int pos = GetPosition() - data.Length;
+            if(pos < 0) {
+                pos = 0;
+            }
+            m_Clip.GetData(data, pos);
+        }
+        protected bool ReadRecordData() {
+            int del = m_MicPosition - m_ReadPosition;
             if(del < 0) {//loop!!
-                del = (m_Clip.samples - m_ReadPosition) + Position;
+                del = (m_Clip.samples - m_ReadPosition) + m_MicPosition;
             }
             //timer += Time.deltaTime;
             if(del > m_Length) {
@@ -173,7 +190,6 @@ namespace UCL.AudioLib {
                         if(Mathf.Abs(data[i]) > m_ClippingThreshold) {
                             valid_count++;
                         }
-                        //max = Mathf.Max(max, Mathf.Abs(data[i]));
                     }
 
                     if(valid_count < m_ClippingValidCount) {//Skip
@@ -202,11 +218,17 @@ namespace UCL.AudioLib {
                 if(m_ReadPosition >= m_Clip.samples) {
                     m_ReadPosition -= m_Clip.samples;
                 }
+                return true;
                 //Debug.LogWarning("Pos:" + Position+",Record!!:"+m_RecordQue.Count);
             }
+            return false;
+        }
+        private void FixedUpdate() {
+            RecordUpdate();
         }
         private void Update() {
-            RecordUpdate();
+            //RecordUpdate();
+
         }
     }
 }

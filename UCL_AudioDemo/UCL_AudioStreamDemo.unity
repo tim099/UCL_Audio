@@ -295,7 +295,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 841de0e1839433e4e93a0d96fb3c0854, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_BufferLen: 2048
+  m_BufferLen: 512
   m_UCL_AudioStream: {fileID: 838307511}
   m_MaxDataCount: 2
   m_InitOnStart: 1
@@ -333,7 +333,6 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
-  f_DebugMode: 1
 --- !u!114 &241782051
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -346,7 +345,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81be6fd9c18874b4491777d08c3f3306, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_DataLen: 1024
+  m_DataLen: 4096
+  m_TextureSize: {x: 128, y: 128}
   m_Source: {fileID: 0}
 --- !u!1 &426562760
 GameObject:
@@ -393,7 +393,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Frequency: 8000
   m_Channels: 1
-  m_Clip: {fileID: 8300000, guid: d506bd17b67f5e04a9275f3b7f583726, type: 3}
+  m_Clip: {fileID: 8300000, guid: f6a4bd22c755b1747904fb7b0c0aaff3, type: 3}
   m_LoadSampleAt: 224912
 --- !u!1 &611204696
 GameObject:
@@ -497,6 +497,7 @@ GameObject:
   m_Component:
   - component: {fileID: 838307510}
   - component: {fileID: 838307511}
+  - component: {fileID: 838307512}
   m_Layer: 0
   m_Name: MicrophoneStream
   m_TagString: Untagged
@@ -538,9 +539,22 @@ MonoBehaviour:
   m_LengthSec: 10
   m_ClippingThreshold: 0.1
   m_ClippingValidCount: 4
-  m_MinValidSegCount: 40
+  m_MinValidSegCount: 80
   m_MaxBufferCount: 4
   m_ReadPosition: 0
+--- !u!114 &838307512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 838307509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: caf51473bac253f4f9d1b17fe0176046, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_DataLen: 4096
 --- !u!1 &900161117
 GameObject:
   m_ObjectHideFlags: 0
@@ -625,6 +639,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1119188693}
   - component: {fileID: 1119188692}
+  - component: {fileID: 1119188694}
   - component: {fileID: 1119188691}
   m_Layer: 0
   m_Name: Main Camera
@@ -699,6 +714,19 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1119188694
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1119188690}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d2d7f12dc3526304a8721dcad7e66d7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_DataLen: 4096
 --- !u!1 &1222190672
 GameObject:
   m_ObjectHideFlags: 0
@@ -810,9 +838,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 841de0e1839433e4e93a0d96fb3c0854, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_BufferLen: 4096
+  m_BufferLen: 512
   m_UCL_AudioStream: {fileID: 426562762}
-  m_MaxDataCount: 2
+  m_MaxDataCount: 8
   m_InitOnStart: 1
   m_Pause: 0
   m_UCL_StreamingAudioSource: {fileID: 0}
@@ -828,7 +856,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81be6fd9c18874b4491777d08c3f3306, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_DataLen: 1024
+  m_DataLen: 4096
+  m_TextureSize: {x: 64, y: 64}
   m_Source: {fileID: 0}
 --- !u!1 &1789817793
 GameObject:
@@ -1017,6 +1046,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_IsPlaying: {fileID: 0}
   m_Img: {fileID: 1789817795}
+  m_AudioSourceDebugGUI: {fileID: 241782051}
 --- !u!1 &1977176143
 GameObject:
   m_ObjectHideFlags: 0

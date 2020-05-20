@@ -19,16 +19,16 @@ namespace UCL.AudioLib {
         public int m_Channels = 1;
         public int m_Frequency = 8000;
         public bool m_Stream = false;
-
+        public int m_BufferCount = 8;
         /// <summary>
         /// Max m_AudioDatas count
         /// </summary>
         public int m_MaxBufferCount = 4;
 
         public AudioClip m_Clip { get; protected set; }
-        protected AudioData m_PrevData = null;
         protected Queue<AudioData> m_AudioDatas;
         float[] m_EmptyArr;
+        float[] m_Buffer;
         bool f_Inited = false;
         virtual public void Init() {
             if(f_Inited) return;
@@ -49,7 +49,8 @@ namespace UCL.AudioLib {
             ClearClip();
             m_AudioDatas.Clear();
             m_EmptyArr = new float[m_LengthSamples * m_Channels];
-            m_Clip = AudioClip.Create(name, 2 * m_LengthSamples, m_Channels, m_Frequency, m_Stream);
+            m_Buffer = new float[m_LengthSamples * m_Channels * m_BufferCount];
+            m_Clip = AudioClip.Create(name, m_BufferCount * m_LengthSamples, m_Channels, m_Frequency, m_Stream);
         }
         public UCL_StreamingAudioClip SetLengthSamples(int val) {
             m_LengthSamples = val;
@@ -67,29 +68,32 @@ namespace UCL.AudioLib {
             return m_AudioDatas.Count;
         }
         public UCL_StreamingAudioClip AddData(float[] data, System.Action<float[]> dispose_act = null) {
-            if(m_AudioDatas.Count >= m_MaxBufferCount || data.Length != m_LengthSamples * m_Channels) {
+            if(m_AudioDatas.Count >= (m_MaxBufferCount+m_BufferCount) || data.Length != m_LengthSamples * m_Channels) {
                 dispose_act?.Invoke(data);
                 return this;
             }
             m_AudioDatas.Enqueue(new AudioData(data, dispose_act));
             return this;
         }
-        protected void SetPrevData(AudioData data) {
-            if(m_PrevData != null) {
-                m_PrevData.Dispose();
-            }
-            m_PrevData = data;
-        }
-        public bool LoadData() {
-            if(m_AudioDatas.Count == 0) {
+        public bool LoadData(ref int sample_at) {
+            if(m_AudioDatas.Count == 0 || sample_at < m_LengthSamples) {
                 return false;
             }
-            var data = m_AudioDatas.Dequeue();
-            if(m_PrevData != null) m_Clip.SetData(m_PrevData.m_Data, 0);
-            else m_Clip.SetData(m_EmptyArr, 0);
+            int len = m_BufferCount * m_LengthSamples;
 
-            m_Clip.SetData(data.m_Data, m_LengthSamples);
-            SetPrevData(data);
+            m_Clip.GetData(m_Buffer, 0);
+            while(m_AudioDatas.Count > 0 && sample_at >= m_LengthSamples) {
+                if(len - sample_at > 0) {
+                    System.Array.Copy(m_Buffer, m_Channels * sample_at, m_Buffer, m_Channels * (sample_at - m_LengthSamples),
+                        m_Channels * (len - sample_at));
+                }
+                sample_at -= m_LengthSamples;
+                
+                var data = m_AudioDatas.Dequeue();
+                System.Array.Copy(data.m_Data, 0, m_Buffer, m_Channels * (len - m_LengthSamples), m_Channels * m_LengthSamples);
+                data.Dispose();
+            }
+            m_Clip.SetData(m_Buffer, 0);
 
             return true;
         }
