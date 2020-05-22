@@ -42,12 +42,24 @@ namespace UCL.AudioLib {
         void FixedUpdate() {
             if(m_Pause) return;
             while(m_UCL_StreamingAudioSource.GetDataCount() < m_MaxDataCount) {
-                var data = m_UCL_AudioStream.Load();
-                if(data != null) {
-                    m_UCL_StreamingAudioSource.AddData(data, m_UCL_AudioStream.Return);
+                if(m_UCL_AudioStream is UCL_MicrophoneStream) {
+                    var mic = m_UCL_AudioStream as UCL_MicrophoneStream;
+                    var data = mic.LoadData();
+                    if(data != null) {
+                        m_UCL_StreamingAudioSource.AddData(data.m_Data, data.Dispose);
+                    } else {
+                        break;
+                    }
                 } else {
-                    break;
+                    var data = m_UCL_AudioStream.Load();
+                    if(data != null) {
+                        m_UCL_StreamingAudioSource.AddData(data, m_UCL_AudioStream.Return);
+                    } else {
+                        break;
+                    }
                 }
+
+
 
             }
         }

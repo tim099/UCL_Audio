@@ -37,6 +37,7 @@ namespace UCL.AudioLib {
             UpdateClipSetting();
         }
         private void OnDestroy() {
+            ClearDatas();
             ClearClip();
         }
         public void ClearClip() {
@@ -68,12 +69,18 @@ namespace UCL.AudioLib {
             return m_AudioDatas.Count;
         }
         public UCL_StreamingAudioClip AddData(float[] data, System.Action<float[]> dispose_act = null) {
-            if(m_AudioDatas.Count >= (m_MaxBufferCount+m_BufferCount) || data.Length != m_LengthSamples * m_Channels) {
+            if(data.Length != m_LengthSamples * m_Channels || m_AudioDatas.Count >= (m_MaxBufferCount+m_BufferCount)) {
                 dispose_act?.Invoke(data);
                 return this;
             }
             m_AudioDatas.Enqueue(new AudioData(data, dispose_act));
             return this;
+        }
+        public void ClearDatas() {
+            if(m_AudioDatas == null) return;
+            while(m_AudioDatas.Count > 0) {
+                m_AudioDatas.Dequeue().Dispose();
+            }
         }
         public bool LoadData(ref int sample_at) {
             if(m_AudioDatas.Count == 0 || sample_at < m_LengthSamples) {

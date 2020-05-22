@@ -14,7 +14,7 @@ namespace UCL.AudioLib {
         public override void UpdateData() {
             base.UpdateData();
             if(m_Source == null) {
-                m_Source = transform.GetComponentInChildren<AudioSource>();
+                m_Source = GetComponentInChildren<AudioSource>();
                 return;
             }
             m_Source.GetOutputData(m_Data, 0);

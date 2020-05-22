@@ -20,7 +20,9 @@ namespace UCL.AudioLib {
                 if(m_Data != null) m_Parent.Return(m_Data);
                 if(m_AudioListenerData != null) m_Parent.Return(m_AudioListenerData);
             }
-            
+            public void Dispose(float[] _data) {
+                Dispose();
+            }
             public float[] m_Data;
             //this will be null if not enable RecordAudioListenerData
             public float[] m_AudioListenerData;
@@ -284,17 +286,21 @@ namespace UCL.AudioLib {
                     }
                 }
                 #endregion
+
                 if(!skip) {
-                    if(m_RecordQue.Count < m_MaxBufferCount) {
+                    int pos = m_AudioListenerData.Length - del;
+                    if(m_RecordQue.Count < m_MaxBufferCount &&(!m_RecordAudioListenerData || pos >= 0)) {
                         var record_data = new RecordData(this).SetData(data);
                         if(m_RecordAudioListenerData) {
                             var lis_data = Rent();
-                            int pos = m_AudioListenerData.Length - del;//m_AudioListenerData.Length - m_ReadTimes * lis_data.Length;
+                            //m_AudioListenerData.Length - m_ReadTimes * lis_data.Length;
+                            /*
                             if(pos < 0) {
                                 Debug.LogWarning("m_AudioListenerData.Length:" + m_AudioListenerData.Length + ",m_ReadTimes:" +
                                     (m_ReadTimes) + ",lis_data.Length:" + lis_data.Length + ",pos:" + pos + ",del:"+ del);
                                 pos = 0;
                             }
+                            */
                             int len = lis_data.Length;
                             if(pos + len > m_AudioListenerData.Length) {
                                 len = m_AudioListenerData.Length - pos;
@@ -304,7 +310,6 @@ namespace UCL.AudioLib {
                         }
                         m_RecordQue.Enqueue(record_data);
                     }
-
                 } else {
                     Return(data);
                 }

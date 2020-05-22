@@ -10,6 +10,11 @@ namespace UCL.AudioLib {
 
         public AudioSource m_Source { get; protected set; }
         public bool m_Playing { get; protected set; } = false;
+
+        /// <summary>
+        /// Clear datas cant be loaded in this frame, avoid delay but may lost some data
+        /// </summary>
+        public bool m_ClearDataAfterLoad = false;
         public UnityEngine.Events.UnityEvent m_OnPlayEvent;
         public UnityEngine.Events.UnityEvent m_OnStopEvent;
         public IsPlayingEvent m_IsPlayingEvent;
@@ -90,11 +95,17 @@ namespace UCL.AudioLib {
                         m_Source.Play();
                         m_OnPlayEvent?.Invoke();
                         m_Source.timeSamples = sample_at;// 0;//length_samples;/2
+                        if(m_ClearDataAfterLoad) {
+                            m_StreamingAudioClip.ClearDatas();
+                        }
                     }
                 } else {//Playing!!
                     if(m_StreamingAudioClip.LoadData(ref sample_at)) {
                         //Debug.LogWarning("ContinuePlay!!:" + m_Source.timeSamples);
                         m_Source.timeSamples = sample_at;//sample_at - length_samples;
+                        if(m_ClearDataAfterLoad) {
+                            m_StreamingAudioClip.ClearDatas();
+                        }
                     }
 
                 }

@@ -166,7 +166,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2d7f12dc3526304a8721dcad7e66d7c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_DataLen: 4096
+  m_DataLen: 16384
   m_TextureSize: {x: 128, y: 128}
 --- !u!21 &179968387
 Material:
@@ -328,6 +328,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5d56e4ba2533d634685f25ddd2584d53, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_ClearDataAfterLoad: 0
   m_OnPlayEvent:
     m_PersistentCalls:
       m_Calls: []
@@ -360,7 +361,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81be6fd9c18874b4491777d08c3f3306, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_DataLen: 4096
+  m_DataLen: 16384
   m_TextureSize: {x: 128, y: 128}
   m_Source: {fileID: 0}
 --- !u!1 &426562760
@@ -546,22 +547,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 08b450de325eb7843ab3db29e83649be, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_Frequency: 32000
+  m_Frequency: 16000
   m_Channels: 1
   m_DeviceID: 0
   m_Loop: 1
   m_Recording: 1
   m_RecordAudioListenerData: 1
   m_LengthSec: 10
-  m_Test: 1
-  m_EchoCancellationOffSet: 79
+  m_EchoCancellationOffSet: 0
   m_MaxRecordLength: 128
-  m_ClippingThreshold: 0.1
+  m_ClippingThreshold: 0
   m_ClippingValidCount: 4
   m_MinValidSegCount: 80
   m_ReadPosition: 0
-  m_FrameTime: 32
-  m_MaxBufferCount: 4
+  m_FrameTime: 64
+  m_MaxBufferCount: 2
 --- !u!114 &838307512
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -574,7 +574,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: caf51473bac253f4f9d1b17fe0176046, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_DataLen: 4096
+  m_DataLen: 16384
   m_TextureSize: {x: 128, y: 128}
   m_MicrophoneStream: {fileID: 0}
 --- !u!1 &900161117
@@ -979,7 +979,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81be6fd9c18874b4491777d08c3f3306, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_DataLen: 4096
+  m_DataLen: 16384
   m_TextureSize: {x: 128, y: 128}
   m_Source: {fileID: 0}
 --- !u!1 &1789817793
