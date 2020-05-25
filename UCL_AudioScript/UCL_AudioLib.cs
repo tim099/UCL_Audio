@@ -35,5 +35,18 @@ namespace UCL.AudioLib {
                 dst[i] = (short)val;
             }
         }
+        public static void PCM_VolumeAlter(float[] src,float scale) {
+            float val = 0;
+            for(int i = 0, len = src.Length; i < len; i++) {
+                val = src[i];
+                val *= scale;
+                if(val > 1.0f) {
+                    val = 1.0f;
+                } else if(val < -1.0f){
+                    val = -1.0f;
+                }
+                src[i] = val;
+            }
+        }
     }
 }

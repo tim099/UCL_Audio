@@ -70,7 +70,14 @@ namespace UCL.AudioLib {
         }
 #endif
         #endregion
+        [UCL.Core.PA.UCL_StrList(typeof(Microphone), "devices")] public string m_DeviceName = "";//{ get; protected set; }
+
+        /// <summary>
+        /// m_DeviceID only work when m_DeviceName cant be find in Microphone.devices
+        /// </summary>
+        [Header(@"Only work when DeviceName can't be find in Microphone.devices")]
         public uint m_DeviceID = 0;
+
         public bool m_Loop = true;
         public bool m_Recording = true;
         public bool m_RecordAudioListenerData = false;
@@ -81,7 +88,7 @@ namespace UCL.AudioLib {
         /// Max record time in milisecond
         /// </summary>
         [Header("Max record time in milisecond")]
-        public int m_MaxRecordLength = 128;
+        public int m_MaxRecordTime = 128;
 
 
         #region Clipping
@@ -102,7 +109,7 @@ namespace UCL.AudioLib {
         //[Space(20)]
         #endregion
 
-        public string m_DeviceName { get; protected set; }
+
 
         #region ReadOnly
 
@@ -149,7 +156,7 @@ namespace UCL.AudioLib {
         }
         protected void UpdateReadOnlyData() {
             m_FrameTime = Mathf.RoundToInt((1000.0f * m_Length) / m_Frequency);
-            m_MaxBufferCount = Mathf.CeilToInt((float)m_MaxRecordLength / m_FrameTime);
+            m_MaxBufferCount = Mathf.CeilToInt((float)m_MaxRecordTime / m_FrameTime);
         }
         public void StartRecord() {
             if(!m_Recording) return;
@@ -157,6 +164,15 @@ namespace UCL.AudioLib {
             if(m_Clip != null) StopRecord();
             UpdateReadOnlyData();
 
+            if(!string.IsNullOrEmpty(m_DeviceName)) {
+                for(uint i = 0,len = (uint)Microphone.devices.Length ; i < len; i++) {
+                    if(m_DeviceName == Microphone.devices[i]) {
+                        m_DeviceID = i;
+                        //Debug.LogWarning("Device find:" + Microphone.devices[i]+",at:"+i);
+                        break;
+                    }
+                }
+            }
             m_DeviceName = Microphone.devices[m_DeviceID];
             m_Clip = Microphone.Start(m_DeviceName, m_Loop, m_LengthSec, m_Frequency);
             if(m_RecordQue == null) {
@@ -322,6 +338,9 @@ namespace UCL.AudioLib {
                 //Debug.LogWarning("Pos:" + Position+",Record!!:"+m_RecordQue.Count);
             }
             return false;
+        }
+        private void Update() {
+            //RecordUpdate();
         }
         private void FixedUpdate() {
             RecordUpdate();

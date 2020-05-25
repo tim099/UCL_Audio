@@ -28,8 +28,8 @@ namespace UCL.AudioLib {
             m_UCL_StreamingAudioSource.GetClip()
                 .SetFrequency(m_UCL_AudioStream.m_Frequency)
                 .SetLengthSamples(m_BufferLen)
-                .SetChannels(m_UCL_AudioStream.m_Channels);
-
+                .SetChannels(m_UCL_AudioStream.m_Channels)
+                .SetBufferCount(m_MaxDataCount);
             m_UCL_StreamingAudioSource.Init();
             m_UCL_StreamingAudioSource.Play();
         }
@@ -38,30 +38,23 @@ namespace UCL.AudioLib {
             if(m_InitOnStart) Init();
         }
 
-
-        void FixedUpdate() {
+        virtual protected void PlayerUpadate() {
             if(m_Pause) return;
-            while(m_UCL_StreamingAudioSource.GetDataCount() < m_MaxDataCount) {
-                if(m_UCL_AudioStream is UCL_MicrophoneStream) {
-                    var mic = m_UCL_AudioStream as UCL_MicrophoneStream;
-                    var data = mic.LoadData();
-                    if(data != null) {
-                        m_UCL_StreamingAudioSource.AddData(data.m_Data, data.Dispose);
-                    } else {
-                        break;
-                    }
+            int load_count = 0;
+            while(m_UCL_StreamingAudioSource.GetDataCount() < m_MaxDataCount && load_count++ < m_MaxDataCount) {
+                var data = m_UCL_AudioStream.Load();
+                if(data != null) {
+                    m_UCL_StreamingAudioSource.AddData(data, m_UCL_AudioStream.Return);
                 } else {
-                    var data = m_UCL_AudioStream.Load();
-                    if(data != null) {
-                        m_UCL_StreamingAudioSource.AddData(data, m_UCL_AudioStream.Return);
-                    } else {
-                        break;
-                    }
+                    break;
                 }
-
-
-
             }
+        }
+        void Update() {//Fixed
+            //PlayerUpadate();
+        }
+        void FixedUpdate() {
+            PlayerUpadate();
         }
     }
 }

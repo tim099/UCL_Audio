@@ -310,9 +310,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 841de0e1839433e4e93a0d96fb3c0854, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_BufferLen: 512
+  m_BufferLen: 256
   m_UCL_AudioStream: {fileID: 838307511}
-  m_MaxDataCount: 2
+  m_MaxDataCount: 16
   m_InitOnStart: 1
   m_Pause: 0
   m_UCL_StreamingAudioSource: {fileID: 241782050}
@@ -349,6 +349,8 @@ MonoBehaviour:
           m_StringArgument: 
           m_BoolArgument: 0
         m_CallState: 2
+  m_VolumeAlter: 1
+  m_TimeSamples: 0
 --- !u!114 &241782051
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -549,14 +551,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Frequency: 16000
   m_Channels: 1
+  m_DeviceName: "\u9EA5\u514B\u98A8 (Realtek High Definition Audio)"
   m_DeviceID: 0
   m_Loop: 1
   m_Recording: 1
-  m_RecordAudioListenerData: 1
+  m_RecordAudioListenerData: 0
   m_LengthSec: 10
   m_EchoCancellationOffSet: 0
-  m_MaxRecordLength: 128
-  m_ClippingThreshold: 0
+  m_MaxRecordTime: 128
+  m_ClippingThreshold: 0.15
   m_ClippingValidCount: 4
   m_MinValidSegCount: 80
   m_ReadPosition: 0
@@ -790,6 +793,7 @@ MonoBehaviour:
   m_IsPlaying: {fileID: 0}
   m_Img: {fileID: 0}
   m_AudioDebugGUI: {fileID: 241782051}
+  test: Hey
 --- !u!135 &1195727032
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -961,9 +965,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 841de0e1839433e4e93a0d96fb3c0854, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_BufferLen: 512
+  m_BufferLen: 256
   m_UCL_AudioStream: {fileID: 426562762}
-  m_MaxDataCount: 8
+  m_MaxDataCount: 32
   m_InitOnStart: 1
   m_Pause: 0
   m_UCL_StreamingAudioSource: {fileID: 0}
@@ -979,8 +983,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81be6fd9c18874b4491777d08c3f3306, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_DataLen: 16384
-  m_TextureSize: {x: 128, y: 128}
+  m_DataLen: 8192
+  m_TextureSize: {x: 512, y: 512}
   m_Source: {fileID: 0}
 --- !u!1 &1789817793
 GameObject:
@@ -1170,6 +1174,7 @@ MonoBehaviour:
   m_IsPlaying: {fileID: 0}
   m_Img: {fileID: 1789817795}
   m_AudioDebugGUI: {fileID: 53044309}
+  test: Hi
 --- !u!1 &1977176143
 GameObject:
   m_ObjectHideFlags: 0

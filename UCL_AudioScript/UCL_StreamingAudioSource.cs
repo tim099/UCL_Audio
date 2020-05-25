@@ -18,6 +18,8 @@ namespace UCL.AudioLib {
         public UnityEngine.Events.UnityEvent m_OnPlayEvent;
         public UnityEngine.Events.UnityEvent m_OnStopEvent;
         public IsPlayingEvent m_IsPlayingEvent;
+        [Range(0f,4f)]public float m_VolumeAlter = 1f;
+        [Core.PA.UCL_ReadOnly] [SerializeField] int m_TimeSamples = 0;
         protected UCL_StreamingAudioClip m_StreamingAudioClip;
         
 
@@ -39,7 +41,7 @@ namespace UCL.AudioLib {
 
             m_Source = gameObject.AddComponent<AudioSource>();
             m_Source.clip = m_StreamingAudioClip.m_Clip;
-            m_Source.loop = false;
+            m_Source.loop = true;
         }
 
         virtual public UCL_StreamingAudioClip GetClip() {
@@ -67,6 +69,10 @@ namespace UCL.AudioLib {
         /// <returns></returns>
         public UCL_StreamingAudioSource AddData(float[] data, System.Action<float[]> dispose_act = null) {
             if(m_StreamingAudioClip == null) return this;
+            if(m_VolumeAlter > 1.01f || m_VolumeAlter < 0.99f) {
+                //Debug.LogWarning("AlterVolume:" + m_VolumeAlter);
+                Lib.PCM_VolumeAlter(data, m_VolumeAlter);
+            }
             m_StreamingAudioClip.AddData(data, dispose_act);
             return this;
         }
@@ -79,39 +85,97 @@ namespace UCL.AudioLib {
                 return m_Source.isPlaying;
             }
         }
-
-        void FixedUpdate() {
+        //int p_times = 0;
+        virtual protected void AudioUpdate() {
             if(!f_Inited) return;
             if(m_StreamingAudioClip == null) return;
             if(m_Playing) {
                 int length_samples = m_StreamingAudioClip.m_LengthSamples;
                 //int channels = m_StreamingAudioClip.m_Channels;
                 //Debug.Log("m_Source.timeSamples:" + m_Source.timeSamples);
-                int sample_at = m_Source.timeSamples;
+                m_TimeSamples = m_Source.timeSamples;
+                
+                if(!m_Source.isPlaying) {//Start play
+
+                    if(m_StreamingAudioClip.GetDataCount() >= (m_StreamingAudioClip.m_BufferCount/4)) {
+                        bool stop = false;
+                        m_TimeSamples = m_StreamingAudioClip.m_LengthSamples * m_StreamingAudioClip.m_BufferCount;
+                        m_StreamingAudioClip.InitData();
+                        if(m_StreamingAudioClip.LoadData(ref m_TimeSamples, out stop)) {
+                            //Debug.LogWarning("StartPlay!!:" + ++p_times + ",m_LoadAt:" + m_StreamingAudioClip.m_LoadAt);
+                            m_Source.Play();
+                            m_Source.timeSamples = 0;
+                            m_OnPlayEvent?.Invoke();
+                            //m_Source.timeSamples = m_TimeSamples;// 0;//length_samples;/2
+                            if(m_ClearDataAfterLoad) {
+                                m_StreamingAudioClip.ClearDatas();
+                            }
+                        }
+                    }
+
+
+                } else {//Playing!!
+                    bool stop = false;
+                    if(m_StreamingAudioClip.LoadData(ref m_TimeSamples, out stop)) {
+                        //Debug.LogWarning("ContinuePlay!!:" + m_Source.timeSamples + ",m_LoadAt:" + m_StreamingAudioClip.m_LoadAt);
+                        //m_Source.timeSamples = m_TimeSamples;//sample_at - length_samples;
+                        if(m_ClearDataAfterLoad) {
+                            m_StreamingAudioClip.ClearDatas();
+                        }
+                    }
+                    if(stop) {
+                        //Debug.LogWarning("Stop!!:"+ p_times);
+                        m_Source.Stop();
+                        m_Source.timeSamples = 0;
+                    }
+                }
+                if(m_TimeSamples < 0) Debug.LogError("m_TimeSamples:" + m_TimeSamples);
+                m_IsPlayingEvent?.Invoke(isPlaying);
+            }
+        }
+        /*
+        virtual protected void AudioUpdate() {
+            if(!f_Inited) return;
+            if(m_StreamingAudioClip == null) return;
+            if(m_Playing) {
+                int length_samples = m_StreamingAudioClip.m_LengthSamples;
+                //int channels = m_StreamingAudioClip.m_Channels;
+                //Debug.Log("m_Source.timeSamples:" + m_Source.timeSamples);
+                m_TimeSamples = m_Source.timeSamples;
                 if(!m_Source.isPlaying) {
-                    sample_at = m_StreamingAudioClip.m_LengthSamples * m_StreamingAudioClip.m_BufferCount;
-                    if(m_StreamingAudioClip.LoadData(ref sample_at)) {
+                    m_TimeSamples = m_StreamingAudioClip.m_LengthSamples * m_StreamingAudioClip.m_BufferCount;
+                    if(m_StreamingAudioClip.LoadData(ref m_TimeSamples)) {
                         //Debug.LogWarning("StartPlay!!");
                         m_Source.Play();
                         m_OnPlayEvent?.Invoke();
-                        m_Source.timeSamples = sample_at;// 0;//length_samples;/2
+                        m_Source.timeSamples = m_TimeSamples;// 0;//length_samples;/2
                         if(m_ClearDataAfterLoad) {
                             m_StreamingAudioClip.ClearDatas();
                         }
                     }
                 } else {//Playing!!
-                    if(m_StreamingAudioClip.LoadData(ref sample_at)) {
+                    if(m_StreamingAudioClip.LoadData(ref m_TimeSamples)) {
                         //Debug.LogWarning("ContinuePlay!!:" + m_Source.timeSamples);
-                        m_Source.timeSamples = sample_at;//sample_at - length_samples;
+                        m_Source.timeSamples = m_TimeSamples;//sample_at - length_samples;
                         if(m_ClearDataAfterLoad) {
                             m_StreamingAudioClip.ClearDatas();
                         }
                     }
 
                 }
-
+                if(m_TimeSamples < 0) Debug.LogError("m_TimeSamples:" + m_TimeSamples);
                 m_IsPlayingEvent?.Invoke(isPlaying);
             }
+        }
+        */
+        int times = 0, f_times = 0;
+        void Update() {//Fixed
+            //Debug.LogWarning("Update:"+times++);
+            //AudioUpdate();
+        }
+        private void FixedUpdate() {
+            //Debug.LogWarning("FixedUpdate:" + f_times++);
+            AudioUpdate();
         }
     }
 }
