@@ -551,7 +551,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Frequency: 16000
   m_Channels: 1
-  m_DeviceName: "\u9EA5\u514B\u98A8 (Realtek High Definition Audio)"
+  m_DeviceName: Microphone (Realtek High Definition Audio)
   m_DeviceID: 0
   m_Loop: 1
   m_Recording: 1

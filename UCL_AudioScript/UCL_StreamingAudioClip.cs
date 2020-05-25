@@ -111,15 +111,25 @@ namespace UCL.AudioLib {
             int load_pos = m_LoadAt * m_LengthSamples;
 
             if(m_AudioDatas.Count == 0) {// || play_at < m_LengthSamples
-                if(play_at >= load_pos && m_PrevPlayAt <= load_pos) {
-                    //Debug.LogWarning("A. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
-                    stop = true;
-                } else if(play_at >= load_pos && (m_PrevPlayAt >= load_pos && m_PrevPlayAt > play_at)) {
-                    //Debug.LogWarning("B. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
-                    stop = true;
-                } else if(play_at <= load_pos && (m_PrevPlayAt <= load_pos && m_PrevPlayAt > play_at)) {
-                    //Debug.LogWarning("C. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
-                    stop = true;
+                if(play_at >= load_pos) {
+                    if(m_PrevPlayAt <= load_pos) {
+                        //Debug.LogWarning("A. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
+                        stop = true;
+                    }else if(m_PrevPlayAt >= load_pos && m_PrevPlayAt > play_at) {
+                        //Debug.LogWarning("B. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
+                        stop = true;
+                    }
+                } else if(play_at < load_pos) {
+                    if((m_PrevPlayAt <= load_pos && m_PrevPlayAt > play_at)) {
+                        //Debug.LogWarning("C. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
+                        stop = true;
+                    }
+                    /*
+                    else if(m_PrevPlayAt > load_pos && m_PrevPlayAt > play_at) {
+                        Debug.LogWarning("D. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
+                        stop = true;
+                    }
+                    */
                 }
                 //if(!stop) Debug.LogWarning("X. !stop ,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
                 m_PrevPlayAt = play_at;
