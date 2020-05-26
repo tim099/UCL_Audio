@@ -551,7 +551,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Frequency: 16000
   m_Channels: 1
-  m_DeviceName: Microphone (Realtek High Definition Audio)
+  m_DeviceName: "\u9EA5\u514B\u98A8 (Realtek High Definition Audio)"
   m_DeviceID: 0
   m_Loop: 1
   m_Recording: 1
@@ -560,11 +560,12 @@ MonoBehaviour:
   m_EchoCancellationOffSet: 0
   m_MaxRecordTime: 128
   m_ClippingThreshold: 0.15
-  m_ClippingValidCount: 4
-  m_MinValidSegCount: 80
+  m_ClippingValidPercent: 0.05
+  m_ClippingMinValidTime: 1024
   m_ReadPosition: 0
   m_FrameTime: 64
   m_MaxBufferCount: 2
+  m_ClippingTimer: 0
 --- !u!114 &838307512
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -965,7 +966,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 841de0e1839433e4e93a0d96fb3c0854, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_BufferLen: 256
+  m_BufferLen: 342
   m_UCL_AudioStream: {fileID: 426562762}
   m_MaxDataCount: 32
   m_InitOnStart: 1

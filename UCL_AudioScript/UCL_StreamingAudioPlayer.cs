@@ -41,7 +41,7 @@ namespace UCL.AudioLib {
         virtual protected void PlayerUpadate() {
             if(m_Pause) return;
             int load_count = 0;
-            while(m_UCL_StreamingAudioSource.GetDataCount() < m_MaxDataCount && load_count++ < m_MaxDataCount) {
+            while(m_UCL_StreamingAudioSource.CanAddData() && load_count++ < m_MaxDataCount) {
                 var data = m_UCL_AudioStream.Load();
                 if(data != null) {
                     m_UCL_StreamingAudioSource.AddData(data, m_UCL_AudioStream.Return);

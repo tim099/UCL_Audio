@@ -92,20 +92,21 @@ namespace UCL.AudioLib {
 
 
         #region Clipping
-        [Header("Clipping Setting")]
         /// <summary>
-        /// if audio sample abs value > m_ClippingThreshold then valid_count++
+        /// valid_count++ if sample value > m_ClippingThreshold
         /// </summary>
+        [Header("valid_count++ if sample value > m_ClippingThreshold")]
         public float m_ClippingThreshold = 0;
         /// <summary>
-        /// if valid_count less than m_ClippingValidCount
-        /// than clip the sample
+        /// sample is invalid if valid_count less than m_ClippingValidPercent"
         /// </summary>
-        public int m_ClippingValidCount = 4;
+        [Header("sample is invalid if valid_count less than m_ClippingValidPercent")]
+        public float m_ClippingValidPercent = 0.05f;//5%
         /// <summary>
-        /// if unvalid count more then MinValidSegCount then start clipping
+        /// start clipping if invalid time more then m_MinValidTime(mili second)
         /// </summary>
-        public int m_MinValidSegCount = 2;
+        [Header("start clipping if invalid time more then m_MinValidTime(mili second)")]
+        public int m_ClippingMinValidTime = 512;//512 ms ,0.5 sec
         //[Space(20)]
         #endregion
 
@@ -117,6 +118,7 @@ namespace UCL.AudioLib {
         /// <summary>
         /// interval of each audio frame in milisecond
         /// </summary>
+        [Header("interval of each audio frame in milisecond")]
         [UCL.Core.PA.UCL_ReadOnly] public int m_FrameTime;
 
         /// <summary>
@@ -126,7 +128,7 @@ namespace UCL.AudioLib {
 
         #endregion
         protected int m_MicPosition = 0;
-        protected int m_ClippingTimer = 0;
+        [UCL.Core.PA.UCL_ReadOnly] [SerializeField] protected int m_ClippingTimer = 0;
         protected Queue<RecordData> m_RecordQue;
         protected AudioClip m_Clip;
 
@@ -281,7 +283,9 @@ namespace UCL.AudioLib {
                 bool skip = false;
                 if(m_ClippingThreshold > 0) {
                     int valid_count = 0;
-                    if(m_ClippingValidCount > data.Length) m_ClippingValidCount = data.Length;
+                    int m_ClipValidCount = Mathf.CeilToInt(m_ClippingValidPercent * data.Length);
+
+                    if(m_ClipValidCount > data.Length) m_ClipValidCount = data.Length;
 
                     for(int i = 0; i < data.Length; i++) {
                         if(Mathf.Abs(data[i]) > m_ClippingThreshold) {
@@ -289,13 +293,13 @@ namespace UCL.AudioLib {
                         }
                     }
 
-                    if(valid_count < m_ClippingValidCount) {//Skip
-                        if(m_ClippingTimer > m_MinValidSegCount) {
+                    if(valid_count < m_ClipValidCount) {//Skip
+                        if(m_ClippingTimer > m_ClippingMinValidTime) {
                             //Debug.LogWarning("Skip sample_times:" + sample_times);
                             skip = true;
                         } else {
                             //Debug.LogWarning("Max:" + max + ",m_ClippingTimer:"+ m_ClippingTimer);
-                            m_ClippingTimer++;
+                            m_ClippingTimer += m_FrameTime;
                         }
                     } else {
                         m_ClippingTimer = 0;

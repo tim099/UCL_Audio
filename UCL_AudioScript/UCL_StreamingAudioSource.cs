@@ -76,6 +76,14 @@ namespace UCL.AudioLib {
             m_StreamingAudioClip.AddData(data, dispose_act);
             return this;
         }
+        /// <summary>
+        /// return true if still have space to add data
+        /// </summary>
+        /// <returns></returns>
+        public bool CanAddData() {
+            if(m_StreamingAudioClip == null) return false;
+            return m_StreamingAudioClip.CanAddData();
+        }
         public int GetDataCount() {
             if(m_StreamingAudioClip == null) return 0;
             return m_StreamingAudioClip.GetDataCount();

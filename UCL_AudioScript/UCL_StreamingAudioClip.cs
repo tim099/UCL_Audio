@@ -25,6 +25,23 @@ namespace UCL.AudioLib {
         /// </summary>
         public int m_MaxBufferCount = 4;
 
+        #region ReadOnly
+        /// <summary>
+        /// interval of each audio frame in milisecond
+        /// </summary>
+        [Header("interval of each audio frame in milisecond")]
+        [UCL.Core.PA.UCL_ReadOnly] public int m_FrameTime;
+
+        /// <summary>
+        /// interval of each audio frame in milisecond
+        /// </summary>
+        [Header("Buffer Time in milisecond")]
+        [UCL.Core.PA.UCL_ReadOnly] public int m_BufferTime;
+
+        #endregion
+
+
+
         public AudioClip m_Clip { get; protected set; }
         protected Queue<AudioData> m_AudioDatas;
         float[] m_EmptyArr;
@@ -49,9 +66,14 @@ namespace UCL.AudioLib {
         public void UpdateClipSetting() {
             ClearClip();
             m_AudioDatas.Clear();
+
+            m_FrameTime = Mathf.RoundToInt((1000.0f * m_LengthSamples) / m_Frequency);
+            m_BufferTime = m_FrameTime * m_BufferCount;
             m_EmptyArr = new float[m_LengthSamples * m_Channels];
             m_Buffer = new float[m_LengthSamples * m_Channels * m_BufferCount];
             m_Clip = AudioClip.Create(name, m_BufferCount * m_LengthSamples, m_Channels, m_Frequency, m_Stream);
+
+            m_AvaliableBufferCount = m_BufferCount;
         }
         public UCL_StreamingAudioClip SetLengthSamples(int val) {
             m_LengthSamples = val;
@@ -69,8 +91,24 @@ namespace UCL.AudioLib {
             m_BufferCount = val;
             return this;
         }
+        public UCL_StreamingAudioClip SetBufferTime(int BufferTime) {
+            m_FrameTime = Mathf.RoundToInt((1000.0f * m_LengthSamples) / m_Frequency);
+            m_BufferCount = Mathf.CeilToInt(BufferTime / (float)m_FrameTime);
+            m_BufferTime = m_FrameTime * m_BufferCount;
+            return this;
+        }
         public int GetDataCount() {
             return m_AudioDatas.Count;
+        }
+        /// <summary>
+        /// return true if still have space to add data
+        /// </summary>
+        /// <returns></returns>
+        public bool CanAddData() {
+            if(m_AudioDatas.Count >= (m_MaxBufferCount + m_AvaliableBufferCount)) {
+                return false;
+            }
+            return true;
         }
         public UCL_StreamingAudioClip AddData(float[] data, System.Action<float[]> dispose_act = null) {
             if(data.Length != m_LengthSamples * m_Channels) {
@@ -79,8 +117,9 @@ namespace UCL.AudioLib {
                 dispose_act?.Invoke(data);
                 return this;
             }
-            if(m_AudioDatas.Count >= (m_MaxBufferCount + m_BufferCount)) {
-                Debug.LogWarning("m_AudioDatas.Count:" + m_AudioDatas.Count+" >= (m_MaxBufferCount+m_BufferCount)");
+            if(!CanAddData()) {
+                Debug.LogWarning("m_AudioDatas.Count:" + m_AudioDatas.Count+ " >= (m_MaxBufferCount+m_AvaliableBufferCount),m_AvaliableBufferCount:"
+                    + m_AvaliableBufferCount);
                 dispose_act?.Invoke(data);
                 return this;
             }
@@ -96,9 +135,11 @@ namespace UCL.AudioLib {
         }
         internal protected int m_LoadAt = 0;
         protected int m_PrevPlayAt = 0;
+        [SerializeField] [Core.PA.UCL_ReadOnly] protected int m_AvaliableBufferCount = 0;
         public void InitData() {
             m_LoadAt = 0;
             m_PrevPlayAt = 0;
+            m_AvaliableBufferCount = m_MaxBufferCount;
         }
 
         public bool LoadData(ref int play_at,out bool stop) {
@@ -109,27 +150,36 @@ namespace UCL.AudioLib {
             if(play_seg >= m_BufferCount) play_seg = m_BufferCount - 1;
 
             int load_pos = m_LoadAt * m_LengthSamples;
-
+            bool stop_flag = false;
+            if(play_at >= load_pos) {
+                if(m_PrevPlayAt <= load_pos) {
+                    //Debug.LogWarning("A. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
+                    stop_flag = true;
+                } else if(m_PrevPlayAt >= load_pos && m_PrevPlayAt > play_at) {
+                    //Debug.LogWarning("B. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
+                    stop_flag = true;
+                }
+            } else if(play_at < load_pos) {
+                if((m_PrevPlayAt <= load_pos && m_PrevPlayAt > play_at)) {
+                    //Debug.LogWarning("C. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
+                    stop_flag = true;
+                }
+            }
+            if(stop_flag) {
+                m_AvaliableBufferCount = m_BufferCount;
+            } else {
+                if(m_LoadAt >= play_seg) {
+                    m_AvaliableBufferCount = m_BufferCount - (m_LoadAt - play_seg);
+                    //Debug.LogWarning("A. m_AvaliableBufferCount:" + m_AvaliableBufferCount + ",m_LoadAt:"+ m_LoadAt+ ",play_seg:"+ play_seg);
+                } else {
+                    m_AvaliableBufferCount = play_seg - m_LoadAt;
+                    //Debug.LogWarning("B. m_AvaliableBufferCount:" + m_AvaliableBufferCount + ",m_LoadAt:" + m_LoadAt + ",play_seg:" + play_seg);
+                }
+                
+            }
             if(m_AudioDatas.Count == 0) {// || play_at < m_LengthSamples
-                if(play_at >= load_pos) {
-                    if(m_PrevPlayAt <= load_pos) {
-                        //Debug.LogWarning("A. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
-                        stop = true;
-                    }else if(m_PrevPlayAt >= load_pos && m_PrevPlayAt > play_at) {
-                        //Debug.LogWarning("B. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
-                        stop = true;
-                    }
-                } else if(play_at < load_pos) {
-                    if((m_PrevPlayAt <= load_pos && m_PrevPlayAt > play_at)) {
-                        //Debug.LogWarning("C. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
-                        stop = true;
-                    }
-                    /*
-                    else if(m_PrevPlayAt > load_pos && m_PrevPlayAt > play_at) {
-                        Debug.LogWarning("D. stop,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
-                        stop = true;
-                    }
-                    */
+                if(stop_flag) {
+                    stop = true;
                 }
                 //if(!stop) Debug.LogWarning("X. !stop ,m_PrevPlayAt:" + m_PrevPlayAt + ",load_pos:" + load_pos + ",play_at:" + play_at);
                 m_PrevPlayAt = play_at;
@@ -141,13 +191,14 @@ namespace UCL.AudioLib {
             stop = false;
             int seg_len = m_LengthSamples;
 
-            if(m_LoadAt > play_seg) {
+            if(m_LoadAt >= play_seg) {
                 while(m_AudioDatas.Count > 0 && m_LoadAt < m_BufferCount) {
 
                     var data = m_AudioDatas.Dequeue();
                     m_Clip.SetData(data.m_Data, m_LoadAt * seg_len);
                     data.Dispose();
                     //++m_LoadCount;
+                    m_AvaliableBufferCount--;
                     ++m_LoadAt;
                 }
                 if(m_LoadAt >= m_BufferCount) m_LoadAt = 0;
@@ -158,10 +209,12 @@ namespace UCL.AudioLib {
                     var data = m_AudioDatas.Dequeue();
                     m_Clip.SetData(data.m_Data, m_LoadAt * seg_len);
                     data.Dispose();
+                    m_AvaliableBufferCount--;
                     ++m_LoadAt;
                 }
                 if(m_LoadAt >= m_BufferCount) m_LoadAt = 0;
             }
+            if(m_AvaliableBufferCount < 0) m_AvaliableBufferCount = 0;
             return true;
         }
         /*
