@@ -101,13 +101,13 @@ namespace UCL.AudioLib {
                 int length_samples = m_StreamingAudioClip.m_LengthSamples;
                 //int channels = m_StreamingAudioClip.m_Channels;
                 //Debug.Log("m_Source.timeSamples:" + m_Source.timeSamples);
-                m_TimeSamples = m_Source.timeSamples;
-                
+                //Debug.LogWarning("AudioUpdate() m_Source.timeSamples:"+ m_Source.timeSamples);
+
                 if(!m_Source.isPlaying) {//Start play
 
                     if(m_StreamingAudioClip.GetDataCount() >= (m_StreamingAudioClip.m_BufferCount/4)) {
                         bool stop = false;
-                        m_TimeSamples = m_StreamingAudioClip.m_LengthSamples * m_StreamingAudioClip.m_BufferCount;
+                        m_TimeSamples = 0;// m_StreamingAudioClip.m_LengthSamples * m_StreamingAudioClip.m_BufferCount;
                         m_StreamingAudioClip.InitData();
                         if(m_StreamingAudioClip.LoadData(ref m_TimeSamples, out stop)) {
                             //Debug.LogWarning("StartPlay!!:" + ++p_times + ",m_LoadAt:" + m_StreamingAudioClip.m_LoadAt);
@@ -124,6 +124,7 @@ namespace UCL.AudioLib {
 
                 } else {//Playing!!
                     bool stop = false;
+                    m_TimeSamples = m_Source.timeSamples;
                     if(m_StreamingAudioClip.LoadData(ref m_TimeSamples, out stop)) {
                         //Debug.LogWarning("ContinuePlay!!:" + m_Source.timeSamples + ",m_LoadAt:" + m_StreamingAudioClip.m_LoadAt);
                         //m_Source.timeSamples = m_TimeSamples;//sample_at - length_samples;

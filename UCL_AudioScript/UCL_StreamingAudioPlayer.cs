@@ -50,7 +50,7 @@ namespace UCL.AudioLib {
                 }
             }
         }
-        void Update() {//Fixed
+        void Update() {
             //PlayerUpadate();
         }
         void FixedUpdate() {

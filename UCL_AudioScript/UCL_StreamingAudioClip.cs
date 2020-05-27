@@ -186,12 +186,15 @@ namespace UCL.AudioLib {
                 return false;
             }
             m_PrevPlayAt = play_at;
-
+#if AudioDebug
+            int prev_loadat = m_LoadAt;
+            int load_count = 0;
+#endif
 
             stop = false;
             int seg_len = m_LengthSamples;
-
-            if(m_LoadAt >= play_seg) {
+            
+            if(m_LoadAt > play_seg) {
                 while(m_AudioDatas.Count > 0 && m_LoadAt < m_BufferCount) {
 
                     var data = m_AudioDatas.Dequeue();
@@ -200,6 +203,9 @@ namespace UCL.AudioLib {
                     //++m_LoadCount;
                     m_AvaliableBufferCount--;
                     ++m_LoadAt;
+#if AudioDebug
+                    ++load_count;
+#endif
                 }
                 if(m_LoadAt >= m_BufferCount) m_LoadAt = 0;
             }
@@ -211,10 +217,16 @@ namespace UCL.AudioLib {
                     data.Dispose();
                     m_AvaliableBufferCount--;
                     ++m_LoadAt;
+#if AudioDebug
+                    ++load_count;
+#endif
                 }
                 if(m_LoadAt >= m_BufferCount) m_LoadAt = 0;
             }
             if(m_AvaliableBufferCount < 0) m_AvaliableBufferCount = 0;
+#if AudioDebug
+            Debug.LogWarning("play_at:"+ play_at+",play_seg:" + play_seg + ",m_LoadAt:" + m_LoadAt + ",prev_loadat:" + prev_loadat+ ",load_count:"+ load_count);
+#endif
             return true;
         }
         /*
