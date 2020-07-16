@@ -18,7 +18,7 @@ namespace UCL.AudioLib {
         virtual public void DrawDebugGUI() {
             UpdateData();
             m_Texture.SetAudioData(m_Data);
-            Core.DebugLib.UCL_DebugOnGUI.Instance.CreateData().SetOnGUIAct(() => {
+            Core.DebugLib.UCL_DebugOnGUI.Instance.CreateData().AddOnGUIAct(() => {
                 GUILayout.BeginVertical();
                 string target_name = this.GetType().UnderlyingSystemType.Name.Replace("UCL_", "");
                 GUILayout.Box(target_name.Replace("DebugGUI",""),GUILayout.Width(m_TextureSize.x+4));
