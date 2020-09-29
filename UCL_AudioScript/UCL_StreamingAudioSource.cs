@@ -142,42 +142,6 @@ namespace UCL.AudioLib {
                 m_IsPlayingEvent?.Invoke(isPlaying);
             }
         }
-        /*
-        virtual protected void AudioUpdate() {
-            if(!f_Inited) return;
-            if(m_StreamingAudioClip == null) return;
-            if(m_Playing) {
-                int length_samples = m_StreamingAudioClip.m_LengthSamples;
-                //int channels = m_StreamingAudioClip.m_Channels;
-                //Debug.Log("m_Source.timeSamples:" + m_Source.timeSamples);
-                m_TimeSamples = m_Source.timeSamples;
-                if(!m_Source.isPlaying) {
-                    m_TimeSamples = m_StreamingAudioClip.m_LengthSamples * m_StreamingAudioClip.m_BufferCount;
-                    if(m_StreamingAudioClip.LoadData(ref m_TimeSamples)) {
-                        //Debug.LogWarning("StartPlay!!");
-                        m_Source.Play();
-                        m_OnPlayEvent?.Invoke();
-                        m_Source.timeSamples = m_TimeSamples;// 0;//length_samples;/2
-                        if(m_ClearDataAfterLoad) {
-                            m_StreamingAudioClip.ClearDatas();
-                        }
-                    }
-                } else {//Playing!!
-                    if(m_StreamingAudioClip.LoadData(ref m_TimeSamples)) {
-                        //Debug.LogWarning("ContinuePlay!!:" + m_Source.timeSamples);
-                        m_Source.timeSamples = m_TimeSamples;//sample_at - length_samples;
-                        if(m_ClearDataAfterLoad) {
-                            m_StreamingAudioClip.ClearDatas();
-                        }
-                    }
-
-                }
-                if(m_TimeSamples < 0) Debug.LogError("m_TimeSamples:" + m_TimeSamples);
-                m_IsPlayingEvent?.Invoke(isPlaying);
-            }
-        }
-        */
-        int times = 0, f_times = 0;
         void Update() {//Fixed
             //Debug.LogWarning("Update:"+times++);
             //AudioUpdate();
