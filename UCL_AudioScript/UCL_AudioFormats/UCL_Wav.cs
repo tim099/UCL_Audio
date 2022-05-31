@@ -1,3 +1,4 @@
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,79 +6,211 @@ using UnityEngine;
 namespace UCL.AudioLib
 {
     /// <summary>
-    /// reference https://answers.unity.com/questions/737002/wav-byte-to-audioclip.html
+    /// reference http://soundfile.sapp.org/doc/WaveFormat/
     /// </summary>
-    public class UCL_Wav
+    public class UCL_Wav : UCL_AudioClip
     {
-        // convert two bytes to one float in the range -1 to 1
-        static float BytesToFloat(byte iFirstByte, byte iSecondByte)
-        {
-            return ((short)((iSecondByte << 8) | iFirstByte) / 32768.0F);// convert to range from -1 to (just below) 1
-        }
+        /// <summary>
+        /// 36 + SubChunk2Size, or more precisely:
+        /// 4 + (8 + SubChunk1Size) + (8 + SubChunk2Size)
+        /// This is the size of the rest of the chunk
+        /// following this number.This is the size of the
+        /// entire file in bytes minus 8 bytes for the
+        /// two fields not included in this count:
+        /// ChunkID and ChunkSize.
+        /// </summary>
+        public int FileSize { get; internal set; }
 
-        static int BytesToInt(byte[] bytes, int offset = 0)
-        {
-            int aVal = 0;
-            for (int i = 0; i < 4; i++)
-            {
-                aVal |= ((int)bytes[offset + i]) << (i * 8);
-            }
-            return aVal;
-        }
-        public float[] ChannelDatas { get; internal set; }
-        //public float[] RightChannel { get; internal set; }
-        public int ChannelCount { get; internal set; }
-        public int SampleCount { get; internal set; }
-        public int Frequency { get; internal set; }
-        public string ClipName { get; internal set; } = "UCL_Wav";
-        public AudioClip Clip
-        {
-            get
-            {
-                if(m_Clip == null)
-                {
-                    m_Clip = AudioClip.Create(ClipName, SampleCount, ChannelCount, Frequency, false);
-                    
-                    m_Clip.SetData(ChannelDatas, 0);
-                    //if(ChannelCount>1) m_Clip.SetData(RightChannel, 1);
-                }
 
-                return m_Clip;
+        /// <summary>
+        /// Contains the letters "WAVE"
+        /// (0x57415645 big-endian form).
+        /// </summary>
+        public string Format { get; internal set; }
+       
+        /// <summary>
+        /// PCM = 1 (i.e. Linear quantization)
+        /// Values other than 1 indicate some form of compression.
+        /// </summary>
+        public int AudioFormat { get; internal set; }
+        /// <summary>
+        /// SampleRate * NumChannels * BitsPerSample/8
+        /// </summary>
+        public int ByteRate { get; internal set; }
+        /// <summary>
+        /// NumChannels * BitsPerSample/8
+        /// The number of bytes for one sample including all channels.
+        /// </summary>
+        public int BlockAlign { get; internal set; }
+        /// <summary>
+        /// 8 bits = 8, 16 bits = 16, etc.
+        /// </summary>
+        public int BitsPerSample { get; internal set; }
+
+        /// <summary>
+        /// NumSamples * NumChannels * BitsPerSample/8
+        /// This is the number of bytes in the data.
+        /// You can also think of this as the size
+        /// of the read of the subchunk following thisnumber.
+        /// </summary>
+        public int DataSize { get; internal set; }
+
+
+        /// <summary>
+        /// Total play time in seconds
+        /// </summary>
+        public override float ClipTime => DataSize / (float)ByteRate;
+        
+        public int[] Datas;
+
+        System.Text.ASCIIEncoding s_Encoder = new System.Text.ASCIIEncoding();
+        int m_ReadAt = 0;
+        byte[] m_Wav = null;
+
+        string ReadString(int iReadCount)
+        {
+            string aResult = s_Encoder.GetString(m_Wav, m_ReadAt, iReadCount);
+            m_ReadAt += iReadCount;
+            return aResult;
+        }
+        int ReadInt()
+        {
+            int aResult = System.BitConverter.ToInt32(m_Wav, m_ReadAt);
+            m_ReadAt += 4;
+            return aResult;
+        }
+        short ReadShort()
+        {
+            short aResult = System.BitConverter.ToInt16(m_Wav, m_ReadAt);
+            m_ReadAt += 2;
+            return aResult;
+        }
+        float ReadFloatShort()
+        {
+            return ReadShort() / 32768.0f;//short.MaxValue + 1;
+        }
+        float ReadFloat()
+        {
+            return ReadInt() / 2147483648f;// int.MaxValue;+ 1;
+        }
+        private void LoadChunk(int iChunckID = 0)//System.IO.FileStream fs
+        {
+            
+            string sChunkID = ReadString(4);
+            //Debug.LogError("sChunkID:" + sChunkID);
+
+            switch (iChunckID)
+            {
+                case 0://ChunkID "RIFF"
+                    {
+                        FileSize = ReadInt();
+                        Format = ReadString(4);
+                        //Debug.LogError("FileSize:" + FileSize + ",Format:" + Format);
+                        break;
+                    }
+                case 1://ChunkID "fmt "
+                    {
+                        var aFMTChunkSize = ReadInt();
+                        int aChunckStartAt = m_ReadAt;
+                        AudioFormat = ReadShort();
+                        ChannelsCount = ReadShort();
+
+                        Frequency = ReadInt();
+
+                        ByteRate = ReadInt();
+                        BlockAlign = ReadShort();
+                        BitsPerSample = ReadShort();
+                        //Debug.LogError("FMTChunkSize:" + aFMTChunkSize + ",AudioFormat:" + AudioFormat + ",ChannelCount:" + ChannelsCount);
+                        //Debug.LogError("Frequency:" + Frequency + ",ByteRate:" + ByteRate + ",BlockAlign:" + BlockAlign + ",BitsPerSample:" + BitsPerSample);
+
+                        m_ReadAt = aChunckStartAt + aFMTChunkSize;//Set position to Chunck End
+                        break;
+                    }
+                case 2://ChunkID "data"
+                    {
+                        DataSize = ReadInt();
+                        SamplesCount = DataSize / ChannelsCount;// * BytesPerSample
+                        //Debug.LogError("data DataSize:" + DataSize + ",SamplesCount:" + SamplesCount);
+                        //aDataLen = SampleCount * ChannelsCount;
+                        Datas = new int[SamplesCount];
+                        m_ChannelDatas = new float[SamplesCount];
+                        switch (BitsPerSample)
+                        {
+                            case 8:
+                                {
+                                    for (int i = 0; i < SamplesCount; i++)
+                                    {
+                                        Datas[i] = m_Wav[m_ReadAt++];
+                                        m_ChannelDatas[i] = Datas[i] / 256f;
+                                    }
+                                    break;
+                                }
+                            case 16:
+                                {
+                                    for (int i = 0; i < SamplesCount; i++)
+                                    {
+                                        Datas[i] = ReadShort();
+                                        m_ChannelDatas[i] = Datas[i] / 32768.0f;
+                                    }
+                                    break;
+                                }
+                            case 32:
+                                {
+                                    for (int i = 0; i < SamplesCount; i++)
+                                    {
+                                        Datas[i] = ReadInt();
+                                        m_ChannelDatas[i] = Datas[i] / 2147483648f;
+                                    }
+                                    break;
+                                }
+                            default:
+                                {
+                                    Debug.LogError("ClipName:" + ClipName + "BitsPerSample:" + BitsPerSample + ", Not support yet!!");
+                                    break;
+                                }
+                        }
+                        break;
+                    }
             }
         }
-        AudioClip m_Clip = null;
         public void Init(byte[] iWav, string iName = "New Wav")
         {
+            m_Wav = iWav;
+            m_ReadAt = 0;
             ClipName = iName;
-            // Determine if mono or stereo
-            ChannelCount = iWav[22];     // Forget byte 23 as 99.999% of WAVs are 1 or 2 channels
 
-            // Get the frequency
-            Frequency = BytesToInt(iWav, 24);
+            LoadChunk(0);
+            LoadChunk(1);
+            LoadChunk(2);
 
-            // Get past all the other sub chunks to get to the data subchunk:
-            int aPos = 12;   // First Subchunk ID from 12 to 16
-
-            // Keep iterating until we find the data chunk (i.e. 64 61 74 61 ...... (i.e. 100 97 116 97 in decimal))
-            while (!(iWav[aPos] == 100 && iWav[aPos + 1] == 97 && iWav[aPos + 2] == 116 && iWav[aPos + 3] == 97))
-            {
-                aPos += 4;
-                int aChunkSize = iWav[aPos] + iWav[aPos + 1] * 256 + iWav[aPos + 2] * 65536 + iWav[aPos + 3] * 16777216;
-                aPos += 4 + aChunkSize;
-            }
-            aPos += 8;// Pos is now positioned to start of actual sound data.
-
-            int aDataLen = (iWav.Length - aPos) / 2;
             
-            SampleCount = aDataLen / (ChannelCount * 2);    // 2 bytes per sample (16 bit sound mono)
 
-            ChannelDatas = new float[aDataLen];
 
-            for (int i = 0; i < aDataLen; i++)
-            {
-                ChannelDatas[i] = BytesToFloat(iWav[aPos + 2 * i], iWav[aPos + 2 * i + 1]);
-            }
-            Debug.LogError(string.Format("[WAV: ChannelCount={0}, SampleCount={1}, Frequency={2}]", ChannelCount, SampleCount, Frequency));
+
+
+            
+            //if(BytesPerSample == 2)
+            //{
+            //    for (int i = 0; i < aDataLen; i++)
+            //    {
+            //        ChannelDatas[i] = ReadFloatShort();
+            //        //if (aDataLen - i < 30)
+            //        //{
+            //        //    //Debug.LogError(i.ToString()+",ChannelDatas[i]:" + ChannelDatas[i]);
+            //        //}
+            //    }
+            //}
+            //else if(BytesPerSample == 4)
+            //{
+            //    for (int i = 0; i < aDataLen; i++)
+            //    {
+            //        ChannelDatas[i] = ReadFloat();
+            //    }
+            //}
+            //else
+            //{
+            //    Debug.LogError("Wave File" + iName + "BytesPerSample:" + BytesPerSample + " !!");
+            //}
         }
         public UCL_Wav(byte[] iWav, string iName = "New Wav")
         {
