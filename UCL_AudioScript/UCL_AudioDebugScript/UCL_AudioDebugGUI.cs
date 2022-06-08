@@ -23,7 +23,7 @@ namespace UCL.AudioLib {
                 string target_name = this.GetType().UnderlyingSystemType.Name.Replace("UCL_", "");
                 GUILayout.Box(target_name.Replace("DebugGUI",""),GUILayout.Width(m_TextureSize.x+4));
                 GUILayout.Box(name, GUILayout.Width(m_TextureSize.x+4));
-                GUILayout.Box(m_Texture.texture);
+                GUILayout.Box(m_Texture.GetTexture());
                 GUILayout.EndVertical();
             });
         }
