@@ -54,6 +54,11 @@ namespace UCL.AudioLib
                 return m_Clip;
             }
         }
+        ~UCL_AudioClip()
+        {
+            Debug.Log("~UCL_AudioClip()");
+            if(m_Clip != null) AudioClip.DestroyImmediate(m_Clip);
+        }
         /// <summary>
         /// X range between 0~1
         /// </summary>
