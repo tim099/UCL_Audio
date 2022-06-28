@@ -7,10 +7,18 @@ namespace UCL.AudioLib
     {
         public static UCL_AudioClip Create(byte[] iBytes, string iName = "New Wav.wav")
         {
-            if (iName.Contains(".wav"))
+            try
             {
-                return new UCL_Wav(iBytes, iName);
+                if (iName.Contains(".wav"))
+                {
+                    return new UCL_Wav(iBytes, iName);
+                }
             }
+            catch(System.Exception iE)
+            {
+                Debug.LogException(iE);
+            }
+
 
             return null;
         }
