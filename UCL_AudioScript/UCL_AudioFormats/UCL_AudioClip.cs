@@ -41,8 +41,10 @@ namespace UCL.AudioLib
         /// SamplesCount = DataSize / ChannelsCount
         /// </summary>
         public int SamplesCount { get; internal set; }
-
-        
+        /// <summary>
+        /// Number of sample frames.
+        /// </summary>
+        public int LengthSamples => m_ChannelDatas.Length / ChannelsCount;
         /// <summary>
         /// Total play time in seconds
         /// </summary>
@@ -55,7 +57,7 @@ namespace UCL.AudioLib
                 if (m_Clip == null)
                 {
                     //Debug.LogError("ClipName:"+ ClipName + "ChannelDatas.Length:" + ChannelDatas.Length+ ",ChannelsCount:"+ ChannelsCount+ ",Frequency:"+ Frequency);
-                    m_Clip = AudioClip.Create(ClipName, m_ChannelDatas.Length, ChannelsCount, Frequency, false);
+                    m_Clip = AudioClip.Create(ClipName, LengthSamples, ChannelsCount, Frequency, false);
                     m_Clip.SetData(m_ChannelDatas, 0);
                 }
 
@@ -71,17 +73,48 @@ namespace UCL.AudioLib
         /// X range between 0~1
         /// </summary>
         /// <param name="iX"></param>
-        /// <returns></returns>
+        /// <returns>-1f~1f</returns>
         virtual public float GetSample(float iX, int iChannel = 0)
         {
             if (m_ChannelDatas.IsNullOrEmpty()) return 0;
+            int aLen = SamplesCount / ChannelsCount;
+            {
+                if (iChannel >= ChannelsCount) iChannel = ChannelsCount - 1;
 
-            if (iChannel >= ChannelsCount) iChannel = ChannelsCount - 1;
+                int aAt = ChannelsCount * Mathf.FloorToInt(iX * aLen) + iChannel;
+                if (aAt >= m_ChannelDatas.Length) aAt = m_ChannelDatas.Length - 1;
+                if (aAt < 0) aAt = 0;
+                return m_ChannelDatas[aAt];
+            }
 
-            int aAt = ChannelsCount * Mathf.FloorToInt(iX * SamplesCount) + iChannel;
-            if (aAt >= m_ChannelDatas.Length) aAt = m_ChannelDatas.Length - 1;
-            if (aAt < 0) aAt = 0;
-            return m_ChannelDatas[aAt];
+            //{
+            //    if (iChannel >= ChannelsCount) iChannel = ChannelsCount - 1;
+
+            //    int aAt = Mathf.FloorToInt(iX * SamplesCount) + iChannel * SamplesCount;
+            //    if (aAt >= m_ChannelDatas.Length) aAt = m_ChannelDatas.Length - 1;
+            //    if (aAt < 0) aAt = 0;
+            //    return m_ChannelDatas[aAt];
+
+            //}
+
+            
+        }
+        /// <summary>
+        /// Draw channel to Texture
+        /// </summary>
+        /// <param name="iTexture"></param>
+        /// <param name="iLineCol"></param>
+        /// <param name="iChannel"></param>
+        virtual public void DrawChannel(UCL.Core.TextureLib.UCL_Texture2D iTexture, Color iLineCol, int iChannel = 0)
+        {
+            iTexture.DrawHorizontalLine(0.5f, iLineCol);
+            iTexture.DrawAudioWav((iX) => {
+                float aVal = GetSample(iX, iChannel);//-1~1f
+                float aSqrt = Mathf.Sqrt(Mathf.Abs(aVal));//0~1f
+
+                if (aVal < 0) return (-0.5f * aSqrt + 0.5f);
+                return (0.5f * aSqrt + 0.5f);
+            }, iLineCol);// + 0.5f Mathf.Sqrt
         }
     }
 }

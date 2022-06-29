@@ -60,8 +60,6 @@ namespace UCL.AudioLib
         /// Total play time in seconds
         /// </summary>
         public override float ClipTime => (float)DataSize / (float)ByteRate;
-        
-        public int[] Datas;
 
         System.Text.ASCIIEncoding s_Encoder = new System.Text.ASCIIEncoding();
         int m_ReadAt = 0;
@@ -111,30 +109,38 @@ namespace UCL.AudioLib
         /// </summary>
         private void LoadListChunk()
         {
-            string aInfoID = ReadString(4);
+            string aInfoID = ReadString(4);//4 byte ASCII text
 
-            int aTextSize = ReadInt();
-            string aInfo = ReadString(aTextSize - 2);
-            Debug.LogError("ListChunk aInfoID:" + aInfoID+ ",aTextSize:"+ aTextSize+ ",aInfo:\""+ aInfo+"\"");
+            int aTextSize = ReadInt();//Size of text 1
+            //Debug.LogError(string.Format("ListChunk aInfoID:\"{0}\",aTextSize:\"{1}\"", aInfoID, aTextSize));
+            string aInfo = ReadString(aTextSize);//-1
+            //Debug.LogError("aInfo:\""+ aInfo+"\"");
+
+            //Debug.LogError("Test:\"" + ReadString(30) + "\"");
+            //for (int i = 0; i < 100 && m_ReadAt < m_Wav.Length; i++)
+            //{
+            //    Debug.LogError((char)m_Wav[m_ReadAt++]);
+            //}
         }
         private void LoadChunk()//System.IO.FileStream fs
         {
             
             string aChunkID = ReadString(4);
-            Debug.LogError("sChunkID:" + aChunkID);
-
+            int aChunkSize = ReadInt();
+            int aChunkStartPos = m_ReadAt;
+            //Debug.LogError("sChunkID:" + aChunkID + ",aChunkSize:" + aChunkSize + ",ReadAt:" + m_ReadAt+",Size:"+m_Wav.Length);
             switch (aChunkID)
             {
                 case "RIFF"://ChunkID "RIFF"
                     {
-                        FileSize = ReadInt();
+                        FileSize = aChunkSize;
                         Format = ReadString(4);
                         //Debug.LogError("FileSize:" + FileSize + ",Format:" + Format);
                         break;
                     }
                 case "fmt "://ChunkID "fmt "
                     {
-                        var aFMTChunkSize = ReadInt();
+                        var aFMTChunkSize = aChunkSize;
                         int aChunckStartAt = m_ReadAt;
                         AudioFormat = ReadShort();
                         ChannelsCount = ReadShort();
@@ -147,39 +153,36 @@ namespace UCL.AudioLib
                         //Debug.LogError("FMTChunkSize:" + aFMTChunkSize + ",AudioFormat:" + AudioFormat + ",ChannelCount:" + ChannelsCount);
                         //Debug.LogError("Frequency:" + Frequency + ",ByteRate:" + ByteRate + ",BlockAlign:" + BlockAlign + ",BitsPerSample:" + BitsPerSample);
 
-                        m_ReadAt = aChunckStartAt + aFMTChunkSize;//Set position to Chunck End
+                        m_ReadAt = aChunkStartPos + aChunkSize;//Set position to Chunck End
                         break;
                     }
                 case "LIST"://ref https://www.recordingblogs.com/wiki/list-chunk-of-a-wave-file
                     {
                         
-                        int aSize = ReadInt();//The size of the sub-chunk less 8 (less the "chunk ID" and the "size")
-                        int aAt = m_ReadAt;
-                        int aListTypeID = ReadInt();//Various ASCII character strings. A common one is "INFO"
-                        Debug.LogError("LIST aSize:" + aSize + ",aListTypeID:" + aListTypeID+ ",aAt:"+ aAt);
-                        try
-                        {
-                            while (m_ReadAt - aAt < aSize)
-                            {
-                                LoadListChunk();
-                                Debug.LogError("LIST aSize:" + aSize + ",m_ReadAt:" + m_ReadAt + ",aAt:" + aAt);
-                            }
-                        }catch(System.Exception iE)
-                        {
-                            Debug.LogException(iE);
-                        }
+                        //int aSize = aChunkSize;//The size of the sub-chunk less 8 (less the "chunk ID" and the "size")
+                        //string aListTypeID = ReadString(4);//Various ASCII character strings. A common one is "INFO"
+                        ////Debug.LogError("LIST aSize:" + aSize + ",aListTypeID:" + aListTypeID + ",m_ReadAt:" + m_ReadAt);
+                        //try
+                        //{
+                        //    while (m_ReadAt - aChunkStartPos < aSize)
+                        //    {
+                        //        LoadListChunk();
+                        //        //Debug.LogError("LIST aSize:" + aSize + ",m_ReadAt - aAt:" + (m_ReadAt - m_ReadAt) + ",m_ReadAt:" + m_ReadAt + ",aAt:" + m_ReadAt);
+                        //    }
+                        //}catch(System.Exception iE)
+                        //{
+                        //    Debug.LogException(iE);
+                        //}
 
-                        m_ReadAt = aAt + aSize;
+                        m_ReadAt = aChunkStartPos + aChunkSize;
                         break;
                     }
                 case "data"://ChunkID "data"
                     {
-                        DataSize = ReadInt();
+                        DataSize = aChunkSize;
 
                         SamplesCount = (int)DataSize / ChannelsCount;// * BytesPerSample
-                        Debug.LogError("data DataSize:" + DataSize + ",ChannelsCount:"+ ChannelsCount + ",SamplesCount:" + SamplesCount);
-
-                        Datas = new int[SamplesCount];
+                        //Debug.LogError("data DataSize:" + DataSize + ",ChannelsCount:"+ ChannelsCount + ",SamplesCount:" + SamplesCount);
                         m_ChannelDatas = new float[SamplesCount];
                         switch (BitsPerSample)
                         {
@@ -187,8 +190,7 @@ namespace UCL.AudioLib
                                 {
                                     for (int i = 0; i < SamplesCount; i++)
                                     {
-                                        Datas[i] = m_Wav[m_ReadAt++];
-                                        m_ChannelDatas[i] = Datas[i] / 256f;
+                                        m_ChannelDatas[i] = m_Wav[m_ReadAt++] / 256f;
                                     }
                                     break;
                                 }
@@ -196,8 +198,8 @@ namespace UCL.AudioLib
                                 {
                                     for (int i = 0; i < SamplesCount; i++)
                                     {
-                                        Datas[i] = ReadShort();
-                                        m_ChannelDatas[i] = Datas[i] / 32768.0f;
+                                        m_ChannelDatas[i] = System.BitConverter.ToInt16(m_Wav, m_ReadAt) / 32768.0f;//ReadShort() / 32768.0f;
+                                        m_ReadAt += 2;
                                     }
                                     break;
                                 }
@@ -205,8 +207,8 @@ namespace UCL.AudioLib
                                 {
                                     for (int i = 0; i < SamplesCount; i++)
                                     {
-                                        Datas[i] = ReadInt();
-                                        m_ChannelDatas[i] = Datas[i] / 2147483648f;
+                                        m_ChannelDatas[i] = System.BitConverter.ToInt32(m_Wav, m_ReadAt) / 2147483648f;
+                                        m_ReadAt += 4;
                                     }
                                     break;
                                 }
@@ -218,7 +220,14 @@ namespace UCL.AudioLib
                         }
                         break;
                     }
+                default:
+                    {
+                        //Debug.LogError("sChunkID:" + aChunkID + ",aChunkSize:" + aChunkSize + ",ReadAt:" + m_ReadAt + ",Size:" + m_Wav.Length);
+                        m_ReadAt = aChunkStartPos + aChunkSize;
+                        break;
+                    }
             }
+            
         }
         public void Init(byte[] iWav, string iName = "New Wav")
         {
@@ -243,9 +252,6 @@ namespace UCL.AudioLib
                     break;
                 }
             }
-            //LoadChunk(0);
-            //LoadChunk(1);
-            //LoadChunk(2);
         }
         public UCL_Wav(byte[] iWav, string iName = "New Wav")
         {
