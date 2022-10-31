@@ -66,7 +66,7 @@ namespace UCL.AudioLib
         }
         ~UCL_AudioClip()
         {
-            Debug.Log("~UCL_AudioClip()");
+            //Debug.Log("~UCL_AudioClip()");
             if(m_Clip != null) AudioClip.DestroyImmediate(m_Clip);
         }
         /// <summary>
