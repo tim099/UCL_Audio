@@ -180,13 +180,14 @@ namespace UCL.AudioLib
                 case "data"://ChunkID "data"
                     {
                         DataSize = aChunkSize;
-
-                        SamplesCount = (int)DataSize / ChannelsCount;// * BytesPerSample
-                        //Debug.LogError("data DataSize:" + DataSize + ",ChannelsCount:"+ ChannelsCount + ",SamplesCount:" + SamplesCount);
+                        //int aTotalSize = m_ReadAt + DataSize;
+                        int aBytePerSample = BitsPerSample / 8;
+                        SamplesCount = (int)DataSize / aBytePerSample;// * BytesPerSample
+                        //Debug.LogError("data DataSize:" + DataSize + ",ChannelsCount:"+ ChannelsCount + ",SamplesCount:" + SamplesCount + ",aBytePerSample:"+ aBytePerSample);
                         m_ChannelDatas = new float[SamplesCount];
-                        switch (BitsPerSample)
+                        switch (aBytePerSample)
                         {
-                            case 8:
+                            case 1:
                                 {
                                     for (int i = 0; i < SamplesCount; i++)
                                     {
@@ -194,7 +195,7 @@ namespace UCL.AudioLib
                                     }
                                     break;
                                 }
-                            case 16:
+                            case 2:
                                 {
                                     for (int i = 0; i < SamplesCount; i++)
                                     {
@@ -203,7 +204,7 @@ namespace UCL.AudioLib
                                     }
                                     break;
                                 }
-                            case 32:
+                            case 4:
                                 {
                                     for (int i = 0; i < SamplesCount; i++)
                                     {
@@ -244,6 +245,7 @@ namespace UCL.AudioLib
                 }catch(System.Exception iE)
                 {
                     Debug.LogException(iE);
+                    //Debug.LogError($"m_ReadAt:{m_ReadAt},m_Wav:{m_Wav.Length},SamplesCount:{SamplesCount}");
                     return;
                 }
                 if (++aLoadChunkTimes > MaxLoadChunkTimes)
