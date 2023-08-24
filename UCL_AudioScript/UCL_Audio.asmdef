@@ -1,8 +1,9 @@
 {
     "name": "UCL_Audio",
+    "rootNamespace": "",
     "references": [
-        "GUID:fb313712d3efc8045821678f6c8743af",
-        "GUID:544d5f3147d0b974f8fdd20239429140"
+        "UCL_Core",
+        "SystemBuffers"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
@@ -11,5 +12,6 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": []
+    "versionDefines": [],
+    "noEngineReferences": false
 }
