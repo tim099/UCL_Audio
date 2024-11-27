@@ -9,7 +9,8 @@ namespace UCL.AudioLib
         {
             try
             {
-                if (iName.Contains(".wav"))
+                string format = iName.ToLower();
+                if (format.Contains(".wav"))
                 {
                     return new UCL_Wav(iBytes, iName);
                 }
