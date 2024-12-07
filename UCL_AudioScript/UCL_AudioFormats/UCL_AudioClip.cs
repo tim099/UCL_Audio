@@ -1,6 +1,9 @@
-﻿using System.Collections;
+﻿using Cysharp.Threading.Tasks;
+using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
+using UnityEngine.Networking;
 namespace UCL.AudioLib
 {
     public class UCL_AudioClip
@@ -22,6 +25,19 @@ namespace UCL.AudioLib
 
 
             return null;
+        }
+        /// <summary>
+        /// Load AudioClip from local file
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        public static async UniTask<AudioClip> LoadFromFile(string filePath)
+        {
+            var path = $"file://{filePath}";
+            var webRequest = UnityWebRequestMultimedia.GetAudioClip(path, UnityEngine.AudioType.UNKNOWN);
+            await webRequest.SendWebRequest();
+            return DownloadHandlerAudioClip.GetContent(webRequest);
         }
 
         AudioClip m_Clip = null;

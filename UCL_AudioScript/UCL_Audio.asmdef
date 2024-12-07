@@ -3,7 +3,8 @@
     "rootNamespace": "",
     "references": [
         "UCL_Core",
-        "SystemBuffers"
+        "SystemBuffers",
+        "UniTask"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
